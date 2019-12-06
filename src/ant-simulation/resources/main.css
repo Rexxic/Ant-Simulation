@@ -1,0 +1,22 @@
+.scroll-pane {
+	-fx-background-insets: 0.0;
+    -fx-padding: 0.0;
+}
+
+.grid {
+	visibility: hidden;
+}
+
+.ant-text {
+	visibility: visible;
+	-fx-font-size: 10.0;
+	-fx-font-weight: normal;
+	-fx-fill: #000000;
+}
+
+.image-file-graphic-text {
+	visibility: visible;
+	-fx-font-size: 12.0;
+	-fx-font-weight: normal;
+	-fx-fill: #000000;
+}
