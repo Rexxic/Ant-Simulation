@@ -16,8 +16,8 @@ public class Ant extends Animal {
     private boolean isLocked;
     private boolean carriesFood;
 
-    public Ant(double x, double y, double rotation, Color color) {
-        super(x, y, rotation, null);
+    public Ant(double x, double y, double rotation, double boost, Color color) {
+        super(x, y, rotation, boost,null);
 
         javafx.scene.paint.Color headColor = javafx.scene.paint.Color.color(color.getRed() / 5, color.getGreen() / 5, color.getBlue() / 5, 1.0);
         javafx.scene.paint.Color bodyColor1 = javafx.scene.paint.Color.color(color.getRed() / 2, color.getGreen() / 2, color.getBlue() / 2, 1.0);

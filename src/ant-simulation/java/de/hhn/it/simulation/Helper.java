@@ -11,7 +11,8 @@ import java.util.Random;
  */
 public class Helper {
     private static final Random random = new Random();
-    private static final int[] colorIndex = {randomInt(14)};
+    private static final int[] colorIndex = {randomInt(12)};
+    private static final int[] redColorIndex = {randomInt(1)};
 
     /**
      * @param upperBound obere Grenze der Zufallszahlen
@@ -78,12 +79,21 @@ public class Helper {
      * die Farben nicht allzu ähnlich sind. Momentan sind 14 verschiedene Farben eingetragen.
      */
     static Color nxtColor() {
-        Color[] color = {Color.BLUE, Color.DARKRED, Color.OLIVEDRAB, Color.WHITESMOKE, Color.BLACK, Color.YELLOW, Color.BROWN,
-                Color.ORANGE, Color.DARKVIOLET, Color.GREEN, Color.INDIGO, Color.GOLDENROD, Color.DARKCYAN, Color.RED};
-        if (colorIndex[0] >= 13) {
+        Color[] color = {Color.BLUE,  Color.OLIVEDRAB, Color.WHITESMOKE, Color.BLACK, Color.YELLOW, Color.BROWN,
+                Color.ORANGE, Color.DARKVIOLET, Color.GREEN, Color.INDIGO, Color.GOLDENROD, Color.DARKCYAN};
+        if (colorIndex[0] >= 11) {
             colorIndex[0] = -1;
         }
         colorIndex[0]++;
         return color[colorIndex[0]];
+    }
+
+    static Color redColor() {
+        Color[] color = {Color.RED};
+        if (redColorIndex[0] >= 0) {
+            redColorIndex[0] = -1;
+        }
+        redColorIndex[0]++;
+        return color[redColorIndex[0]];
     }
 }

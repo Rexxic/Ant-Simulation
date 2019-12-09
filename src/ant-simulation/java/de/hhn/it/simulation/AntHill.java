@@ -11,6 +11,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
 
     private ArrayList<Ant> antArrayList;
     private String antHillText;
+    private double boost;
     private long lastChildrenCreation;
     private int stash;
 
@@ -34,11 +35,15 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
         List<Ant> newAntList = new ArrayList<>();
         if (System.currentTimeMillis() - lastChildrenCreation >= 9000 + Helper.randomInt(2000)) {
             for (int count = 0; count < stash / 10; count++) {
-                newAntList.add(new Ant(super.x, super.y, Helper.randomDouble(360), workerColor));
+                newAntList.add(new Ant(super.x, super.y, Helper.randomDouble(360), boost, workerColor));
             }
             lastChildrenCreation = System.currentTimeMillis();
         }
         return newAntList;
+    }
+
+    public boolean removeChildren(Ant ant) {
+        return antArrayList.remove(ant);
     }
 
     public void giveAntList(List<Ant> antList) {
@@ -56,6 +61,10 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
 
     public void giveFood() {
         stash++;
+    }
+
+    public void boost(double boost) {
+        this.boost = boost;
     }
 
     /**

@@ -17,43 +17,70 @@ import java.util.List;
  * @see AntApplication#SIMULATION_FRAME_LENGTH
  */
 public class Simulation {
-    private static final int ANTHILL_COUNT = 4;
-    private static final int FOOD_COUNT = 6;
-    private static final int MIN_ANT_COUNT = 80;
-    private static final int MAX_ANT_COUNT = 400;
-    private static final int FIELD_OF_VIEW = 50;
+    private enum AntHillType {CommonAntHill, FireAntHill}
+
+    private static final int COMMON_ANTHILL_COUNT = 4;
+    private static final int FIRE_ANTHILL_COUNT = 1;
+    private static final int FOOD_COUNT = 20;
+    private static final int MIN_ANT_COUNT = 200;
+    private static final int MAX_ANT_COUNT = 800;
+    private static final int FIELD_OF_VIEW = 100;
 
     private static double simulationSurfaceHeight;
     private static double simulationSurfaceWidth;
 
     private UiManager uiManager;
     private ArrayList<Food> foodArrayList;
-    private ArrayList<AntHill> antHillArrayList;
+    private ArrayList<AntHill> commonAntHillArrayList;
+    private ArrayList<AntHill> fireAntHillArrayList;
     private HashMap<Ant, Ant[]> antAntArrayHashMap;
     private HashMap<Ant, Food> antFoodHashMap;
+    private HashMap<Animal, Animal> predatorHashMap;
 
     public Simulation(UiManager uiManager) {
         this.uiManager = uiManager;
         this.foodArrayList = new ArrayList<>();
-        this.antHillArrayList = new ArrayList<>();
+        this.commonAntHillArrayList = new ArrayList<>();
+        this.fireAntHillArrayList = new ArrayList<>();
         this.antAntArrayHashMap = new HashMap<>();
         this.antFoodHashMap = new HashMap<>();
+        this.predatorHashMap = new HashMap<>();
 
         Simulation.simulationSurfaceHeight = uiManager.getSimulationSurfaceHeight();
         Simulation.simulationSurfaceWidth = uiManager.getSimulationSurfaceWidth();
 
-        for (int a = 0; a < ANTHILL_COUNT; a++) {
+        creatAntHills(AntHillType.FireAntHill);
+        creatAntHills(AntHillType.CommonAntHill);
+    }
+
+    public void creatAntHills(AntHillType anthillType) {
+        int antHillCount = anthillType == AntHillType.FireAntHill ? FIRE_ANTHILL_COUNT : COMMON_ANTHILL_COUNT;
+
+        for (int a = 0; a < antHillCount; a++) {
             double x = simulationSurfaceWidth / 2 + Helper.randomDoubleUpperLowerBound(simulationSurfaceWidth / 3);
             double y = simulationSurfaceHeight / 2 + Helper.randomDoubleUpperLowerBound(simulationSurfaceHeight / 3);
-            int startSize = MIN_ANT_COUNT / ANTHILL_COUNT + Helper.randomInt(10);
-            Color color = Helper.nxtColor();
-            AntHill antHill = new AntHill(x, y, Helper.randomInt(180) - 90, color, startSize * 10);
-            antHillArrayList.add(antHill);
+            double boost = 0;
+            int startSize = MIN_ANT_COUNT / COMMON_ANTHILL_COUNT + Helper.randomInt(10);
+
+            AntHill antHill;
+            Color color;
+            if (anthillType == AntHillType.FireAntHill) {
+                color = Helper.redColor();
+                startSize /= 8;
+                antHill = new AntHill(x, y, Helper.randomInt(180) - 90, color, startSize * 10);
+                fireAntHillArrayList.add(antHill);
+                boost = 0.1;
+                antHill.boost(boost);
+            } else {
+                color = Helper.nxtColor();
+                antHill = new AntHill(x, y, Helper.randomInt(180) - 90, color, startSize * 10);
+                commonAntHillArrayList.add(antHill);
+            }
             uiManager.add(antHill);
 
             List<Ant> newAntList = new ArrayList<>();
             for (int count = 0; count < startSize; count++) {
-                Ant ant = new Ant(x, y, Helper.randomDouble(360), color);
+                Ant ant = new Ant(x, y, Helper.randomDouble(360), boost, color);
                 newAntList.add(ant);
                 uiManager.add(ant);
             }
@@ -66,9 +93,19 @@ public class Simulation {
      */
     public void doSimulationStep() {
         final int[] antCount = {0};
+        final List<Animal> commonAntArrayList = new ArrayList<>();
+        final List<Animal> fireAntArrayList = new ArrayList<>();
 
         antAntArrayHashMap.clear();
-        antHillArrayList.forEach(AntHill -> antCount[0] += AntHill.getAntCount());
+        commonAntHillArrayList.forEach(AntHill -> {
+            antCount[0] += AntHill.getAntCount();
+            commonAntArrayList.addAll(AntHill.getAntList());
+        });
+
+        fireAntHillArrayList.forEach(AntHill -> {
+            antCount[0] += AntHill.getAntCount();
+            fireAntArrayList.addAll(AntHill.getAntList());
+        });
 
         if (antCount[0] != 0) {
             while (foodArrayList.size() < FOOD_COUNT) {
@@ -81,13 +118,23 @@ public class Simulation {
             }
         }
 
-        for (AntHill antHill : antHillArrayList) {
+        for (AntHill antHill : commonAntHillArrayList) {
+            antCount[0] = createChildren(antHill, antCount[0]);
+            List<Ant> antHillAntList = antHill.getAntList();
+            for (Ant ant : antHill.getAntList()) {
+                updateAntAntArrayHashMap(ant, antHillAntList);
+                updateAntFoodHashMap(ant);
+                commonAntMovementHandler(ant, antHill);
+            }
+            antHill.doSimulationStep();
+        }
+
+        for (AntHill antHill : fireAntHillArrayList) {
             antCount[0] = createChildren(antHill, antCount[0]);
 
             for (Ant ant : antHill.getAntList()) {
-                updateAntAntArrayHashMap(ant, antHill.getAntList());
-                updateAntFoodHashMap(ant);
-                antMovementHandler(ant, antHill);
+                updatePredatorHashMap(ant, commonAntArrayList);
+                fireAntMovementHandler(ant, antHill);
             }
             antHill.doSimulationStep();
         }
@@ -115,7 +162,7 @@ public class Simulation {
         Ant[] antArray = new Ant[5];
 
         for (Ant antTarget : antList) {
-            if (!ant.equals(antTarget) && count < 5 && computeDistance(ant, antTarget) <= FIELD_OF_VIEW) {
+            if (!ant.equals(antTarget) && count < 5 && calculateDistance(ant, antTarget) <= FIELD_OF_VIEW) {
                 antArray[count] = antTarget;
                 count++;
             } else if (count >= 5) {
@@ -125,10 +172,26 @@ public class Simulation {
         antAntArrayHashMap.put(ant, antArray);
     }
 
+    public void updatePredatorHashMap(Animal animal, List<Animal> targetList) {
+        double minDistance = FIELD_OF_VIEW;
+        boolean somethingNear = false;
+        for (Animal target : targetList) {
+            double distance = calculateDistance(animal, target);
+            if (distance < minDistance) {
+                predatorHashMap.put(animal, target);
+                minDistance = distance;
+                somethingNear = true;
+            }
+        }
+        if (!somethingNear) {
+            predatorHashMap.remove(animal);
+        }
+    }
+
     public void updateAntFoodHashMap(Ant ant) {
         if (!antFoodHashMap.containsKey(ant)) {
             for (Food food : foodArrayList) {
-                if (computeDistance(ant, food) <= FIELD_OF_VIEW * 2) {
+                if (calculateDistance(ant, food) <= FIELD_OF_VIEW) {
                     antFoodHashMap.put(ant, food);
                     break;
                 }
@@ -136,7 +199,7 @@ public class Simulation {
         }
     }
 
-    public void antMovementHandler(Ant ant, AntHill antHill) {
+    public void commonAntMovementHandler(Ant ant, AntHill antHill) {
         if (!antFoodHashMap.containsKey(ant)) {
             for (Ant nearAnt : antAntArrayHashMap.get(ant)) {
                 if (antFoodHashMap.containsKey(nearAnt)) {
@@ -171,17 +234,49 @@ public class Simulation {
             }
         }
 
-        if (food != null) {
+        antSetTarget(ant, food, antHill);
+    }
+
+    public void fireAntMovementHandler(Ant ant, AntHill antHill) {
+        Ant target;
+
+        if (predatorHashMap.containsKey(ant) && predatorHashMap.get(ant).getClass() == Ant.class) {
+            target = (Ant) predatorHashMap.get(ant);
+        } else {
+            target = null;
+        }
+
+        if (ant.isNearTarget() && ant.isCarryingFood()) {
+            ant.isCarryingFood(false);
+            antHill.giveFood();
+        } else if (target != null &! ant.isCarryingFood()){
+            if (calculateDistance(ant,target) <= 5) {
+                for (AntHill targetAntHill : commonAntHillArrayList) {
+                    if (targetAntHill.removeChildren(target)) {
+                        ant.isCarryingFood(true);
+                        predatorHashMap.remove(ant);
+                        uiManager.remove(target);
+                        target = null;
+                        break;
+                    }
+                }
+            }
+        }
+        antSetTarget(ant, target, antHill);
+    }
+
+    private void antSetTarget(Ant ant, SimulationMember target, SimulationMember antHill) {
+        if (target != null) {
             ant.lock(true);
             if (!ant.isCarryingFood()) {
-                ant.setNewTarget(food.getX(), food.getY());
+                ant.setNewTarget(target.getX(), target.getY());
             } else ant.setNewTarget(antHill.getX(), antHill.getY());
         } else if (!ant.isCarryingFood()) {
             ant.lock(false);
         } else ant.setNewTarget(antHill.getX(), antHill.getY());
     }
 
-    public double computeDistance(SimulationMember member1, SimulationMember member2) {
+    public double calculateDistance(SimulationMember member1, SimulationMember member2) {
         return Helper.distance(member1.getX() - member2.getX(), member1.getY() - member2.getY());
     }
 
