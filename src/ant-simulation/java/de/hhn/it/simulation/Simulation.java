@@ -20,7 +20,6 @@ public class Simulation {
     private enum AntHillType {CommonAntHill, FireAntHill}
 
     private static final int COMMON_ANTHILL_COUNT = 4;
-    private static final int FIRE_ANTHILL_COUNT = 1;
     private static final int FOOD_COUNT = 20;
     private static final int MIN_ANT_COUNT = 200;
     private static final int MAX_ANT_COUNT = 800;
