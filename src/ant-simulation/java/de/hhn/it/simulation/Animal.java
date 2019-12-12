@@ -3,7 +3,6 @@ package de.hhn.it.simulation;
 import de.hhn.it.ui.ImageFileGraphic;
 
 public abstract class Animal extends SimulationMember {
-    private static final double STEP = 1;
     private static final double SURFACE_HEIGHT = Simulation.getSimulationSurfaceHeight();
     private static final double SURFACE_WIDTH = Simulation.getSimulationSurfaceWidth();
 
@@ -11,16 +10,15 @@ public abstract class Animal extends SimulationMember {
     protected boolean hasTarget;
     private double targetX;
     private double targetY;
-    private double boost = 0;
+    private double step = 1;
 
-    public Animal(double x, double y, double rotation, double boost, ImageFileGraphic graphic) {
+    public Animal(double x, double y, double rotation, ImageFileGraphic graphic) {
         super(x, y, rotation, graphic);
 
         this.reachedTarget = false;
         this.hasTarget = false;
         this.targetX = -50;
         this.targetY = -50;
-        this.boost = boost;
     }
 
     protected void rotationManipulator() {
@@ -91,8 +89,8 @@ public abstract class Animal extends SimulationMember {
      * Bewegt das Tier einen STEP in die Richtung in die es schaut.
      */
     protected void stepForward() {
-        super.x += (Math.cos(Helper.degreeToRadian(super.rotation)) * (STEP + boost));
-        super.y += (-Math.sin(Helper.degreeToRadian(super.rotation)) * (STEP + boost));
+        super.x += (Math.cos(Helper.degreeToRadian(super.rotation)) * step);
+        super.y += (-Math.sin(Helper.degreeToRadian(super.rotation)) * step);
     }
 
     /**
@@ -113,5 +111,9 @@ public abstract class Animal extends SimulationMember {
 
     public boolean isNearTarget() {
         return reachedTarget;
+    }
+
+    public void setStep(double step) {
+        this.step = step;
     }
 }

@@ -5,12 +5,19 @@ import javafx.animation.Timeline;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.List;
 
 /**
  * Mit dem UiManager können Simulationsteilnehmer auf die Simulationsoberfläche
@@ -21,24 +28,31 @@ import java.util.*;
  */
 public class UiManager {
     private final Pane root;
+    private final Stage stage;
     private final Group bottomGroup = new Group();
     private final Group middleGroup = new Group();
     private final Group topGroup = new Group();
+    private final Group controlGroup = new Group();
     private final Map<SimulationMember, Group> simulationMembersOnGroup = new HashMap<>();
     private Simulation simulation;
     private Timeline mainAnimation;
     private LegAnimation legAnimation;
+    private boolean paused;
 
     /**
      * @param scene nicht {@code null}
      * @param root  nicht {@code null}
      */
-    UiManager(Scene scene, Pane root) {
+    UiManager(Scene scene, Pane root, Stage stage) {
         this.root = Objects.requireNonNull(root);
+        this.stage = stage;
+        this.paused = false;
 
         root.getChildren().add(bottomGroup);
         root.getChildren().add(middleGroup);
         root.getChildren().add(topGroup);
+
+        initButtons();
     }
 
     /**
@@ -485,6 +499,7 @@ public class UiManager {
         if (mainAnimation != null && legAnimation != null) {
             mainAnimation.pause();
             legAnimation.pause();
+            paused = true;
         } else
             throw new IllegalStateException("main animation or leg animation not set");
     }
@@ -497,6 +512,7 @@ public class UiManager {
         if (mainAnimation != null && legAnimation != null) {
             mainAnimation.play();
             legAnimation.play();
+            paused = false;
         } else
             throw new IllegalStateException("main animation or leg animation not set");
     }
@@ -515,5 +531,41 @@ public class UiManager {
 
     private static enum Layer {
         BOTTOM, MIDDLE, TOP
+    }
+
+    private void initButtons() {
+        Background background = new Background(new BackgroundFill(Color.OLIVE,new CornerRadii(10),null));
+
+        Button button = new Button();
+
+        button.setText("Fullscreen");
+        button.setBackground(background);
+        button.setFont(Font.font(null,FontWeight.BOLD,15));
+        button.setOnAction(E -> stage.setFullScreen(!stage.isFullScreen()));
+
+        controlGroup.getChildren().add(button);
+
+        ImageView pauseSign = new ImageView();
+        ImageView playSign = new ImageView();
+        pauseSign.setImage(ImageFileGraphic.loadImage("pause.png"));
+        playSign.setImage(ImageFileGraphic.loadImage("play.png"));
+
+        Button pauseButton = new Button();
+
+        pauseButton.setGraphic(pauseSign);
+        pauseButton.setBackground(background);
+        pauseButton.setLayoutX(100);
+        pauseButton.setOnAction(E -> {
+            if (paused) {
+                playSimulation();
+                pauseButton.setGraphic(pauseSign);
+            } else {
+                pauseSimulation();
+                pauseButton.setGraphic(playSign);
+            }
+        });
+
+        controlGroup.getChildren().add(pauseButton);
+        root.getChildren().add(controlGroup);
     }
 }

@@ -61,4 +61,24 @@ public class ImageFileGraphic extends SimulationGraphic {
     protected Node getUiNode() {
         return imageNode;
     }
+
+    /**
+     * Methode um das reine Bild als instanz von Image zur Verwendung mit javafx zu laden.
+     * @param fileName Datei.png
+     */
+    public static Image loadImage(String fileName) {
+        Image image;
+
+        if (imagesCache.containsKey(fileName))
+            image = imagesCache.get(fileName);
+        else {
+            URL resource = ImageFileGraphic.class.getClassLoader().getResource(fileName);
+            if (resource == null)
+                throw new IllegalArgumentException(String.format("File %s not found", fileName));
+
+            image = new Image(resource.toExternalForm());
+            imagesCache.put(fileName, image);
+        }
+        return image;
+    }
 }

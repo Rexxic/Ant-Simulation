@@ -1,5 +1,6 @@
 package de.hhn.it.ui;
 
+import de.hhn.it.mapBuilder.NoiseImageBuilder;
 import de.hhn.it.simulation.Simulation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -26,8 +27,9 @@ public class AntApplication extends Application {
      * Increase SIMMULATION_SURFACE WIDHT and HEIGHT if you want a bigger
      * surface
      */
-    private static final double SIMMULATION_SURFACE_WIDTH = 1920;
-    private static final double SIMMULATION_SURFACE_HEIGHT = 1080;
+    private static final double SCALE = 4;
+    private static final double SIMMULATION_SURFACE_WIDTH = 1920 * SCALE;
+    private static final double SIMMULATION_SURFACE_HEIGHT = 1080 * SCALE;
     /*
      * Increase SCROLLPANE WIDTH and HEIGHT if you want a bigger window
      */
@@ -57,7 +59,9 @@ public class AntApplication extends Application {
         stage.setTitle("Ameisensimulation \u00A9 Fakultaet fuer Informatik - Hochschule Heilbronn 2018");
 
         // background ...
-        ImageView background = new ImageView(AntApplication.class.getClassLoader().getResource("sand.png").toExternalForm());
+        NoiseImageBuilder noiseImageBuilder = new NoiseImageBuilder((int) SIMMULATION_SURFACE_WIDTH, (int) SIMMULATION_SURFACE_HEIGHT);
+        noiseImageBuilder.drawColor();
+        ImageView background = new ImageView(noiseImageBuilder);
         background.setCache(true);
         root.getChildren().add(background);
 
@@ -66,9 +70,10 @@ public class AntApplication extends Application {
 
         stage.show();
         stage.setResizable(true);
-        stage.setFullScreen(true);
+        stage.setFullScreen(false);
 
-        final UiManager uiManager = new UiManager(scene, root);
+
+        final UiManager uiManager = new UiManager(scene, root, stage);
 
         final Timeline mainAnimator = new Timeline(new KeyFrame(Duration.millis(SIMULATION_FRAME_LENGTH), new EventHandler<ActionEvent>() {
             @Override
