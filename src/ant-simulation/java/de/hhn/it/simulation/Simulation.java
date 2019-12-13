@@ -21,22 +21,28 @@ public class Simulation {
     private static final int FOOD_COUNT = 20;
     private static final int MIN_ANT_COUNT = 200;
     private static final int MAX_ANT_COUNT = 800;
-    private static final int FIELD_OF_VIEW = 200;
+    private static final int NATURAL_ENEMY_COUNT = 4;
+    private static final int FIELD_OF_VIEW = 150;
+    private static final int FOOD_STASH_MULTIPLICAND = 5;
 
     private static double simulationSurfaceHeight;
     private static double simulationSurfaceWidth;
 
     private UiManager uiManager;
     private ArrayList<Food> foodArrayList;
-    private ArrayList<AntHill> antHillArrayList;
+    private ArrayList<AntHill> antHillList;
+    private ArrayList<NaturalEnemy> naturalEnemyList;
     private HashMap<Ant, Ant[]> antAntArrayHashMap;
     private HashMap<Ant, Food> antFoodHashMap;
     private HashMap<Animal, Animal> predatorHashMap;
 
     public Simulation(UiManager uiManager) {
         this.uiManager = uiManager;
+
         this.foodArrayList = new ArrayList<>();
-        this.antHillArrayList = new ArrayList<>();
+        this.antHillList = new ArrayList<>();
+        this.naturalEnemyList = new ArrayList<>();
+
         this.antAntArrayHashMap = new HashMap<>();
         this.antFoodHashMap = new HashMap<>();
         this.predatorHashMap = new HashMap<>();
@@ -45,13 +51,13 @@ public class Simulation {
         Simulation.simulationSurfaceWidth = uiManager.getSimulationSurfaceWidth();
 
         for (int a = 0; a < ANTHILL_COUNT; a++) {
-            double x = simulationSurfaceWidth / 2 + Helper.randomDoubleUpperLowerBound(simulationSurfaceWidth / 3);
-            double y = simulationSurfaceHeight / 2 + Helper.randomDoubleUpperLowerBound(simulationSurfaceHeight / 3);
+            double x = rndWidth(1 / 16f);
+            double y = rndHeight(1 / 9f);
             int startSize = MIN_ANT_COUNT / ANTHILL_COUNT + Helper.randomInt(10);
 
             Color color = Helper.nxtColor();
             AntHill antHill = new AntHill(x, y, Helper.randomInt(180) - 90, color, startSize * 10);
-            antHillArrayList.add(antHill);
+            antHillList.add(antHill);
             uiManager.add(antHill);
 
             List<Ant> newAntList = new ArrayList<>();
@@ -61,6 +67,14 @@ public class Simulation {
                 uiManager.add(ant);
             }
             antHill.giveAntList(newAntList);
+        }
+
+        for (int b = 0; b < NATURAL_ENEMY_COUNT; b++) {
+            double x = rndWidth(50 / simulationSurfaceWidth);
+            double y = rndHeight(50 / simulationSurfaceHeight);
+            NaturalEnemy naturalEnemy = new NaturalEnemy(x, y, Helper.randomDouble(360));
+            naturalEnemyList.add(naturalEnemy);
+            uiManager.add(naturalEnemy);
         }
     }
 
@@ -72,23 +86,23 @@ public class Simulation {
         final List<Animal> allAntArrayList = new ArrayList<>();
 
         antAntArrayHashMap.clear();
-        antHillArrayList.forEach(AntHill -> {
+        antHillList.forEach(AntHill -> {
             antCount[0] += AntHill.getAntCount();
             allAntArrayList.addAll(AntHill.getAntList());
         });
 
         if (antCount[0] != 0) {
             while (foodArrayList.size() < FOOD_COUNT) {
-                double x = 0.05 * simulationSurfaceWidth + Helper.randomDouble(simulationSurfaceWidth * 0.9);
-                double y = 0.075 * simulationSurfaceHeight + Helper.randomDouble(simulationSurfaceHeight * 0.85);
+                double x = rndWidth(50 / simulationSurfaceWidth);
+                double y = rndHeight(50 / simulationSurfaceHeight);
 
-                Food food = new Food(x, y, 10 + Helper.randomInt(antCount[0] / FOOD_COUNT));
+                Food food = new Food(x, y, 10 + Helper.randomInt(antCount[0] / FOOD_COUNT * FOOD_STASH_MULTIPLICAND));
                 uiManager.add(food);
                 foodArrayList.add(food);
             }
         }
 
-        for (AntHill antHill : antHillArrayList) {
+        for (AntHill antHill : antHillList) {
             antCount[0] = createChildren(antHill, antCount[0]);
             List<Ant> antHillAntList = antHill.getAntList();
             allAntArrayList.removeAll(antHillAntList);
@@ -105,6 +119,10 @@ public class Simulation {
             }
             allAntArrayList.addAll(antHillAntList);
             antHill.doSimulationStep();
+        }
+
+        for(NaturalEnemy naturalEnemy : naturalEnemyList) {
+            naturalEnemy.doSimulationStep();
         }
     }
 
@@ -220,7 +238,7 @@ public class Simulation {
             antHill.giveFood();
         } else if (target != null & !ant.isCarryingFood()) {
             if (calculateDistance(ant, target) <= 5) {
-                for (AntHill targetAntHill : antHillArrayList) {
+                for (AntHill targetAntHill : antHillList) {
                     if (targetAntHill.removeChildren(target)) {
                         ant.isCarryingFood(true);
                         predatorHashMap.remove(ant);
@@ -265,5 +283,31 @@ public class Simulation {
 
     public static double getSimulationSurfaceWidth() {
         return simulationSurfaceWidth;
+    }
+
+    /**
+     * @param excludedPercent if<0=0; if>=1=1;>
+     */
+    private static double rndHeight(double excludedPercent) {
+        if (excludedPercent <= 0) {
+            excludedPercent = 0;
+        } else if (excludedPercent >= 1) {
+            excludedPercent = 1;
+        }
+
+        return excludedPercent / 2 * simulationSurfaceHeight + Helper.randomDouble(simulationSurfaceHeight * (1 - excludedPercent));
+    }
+
+    /**
+     * @param excludedPercent if<0=0; if>=1=1;>
+     */
+    private static double rndWidth(double excludedPercent) {
+        if (excludedPercent <= 0) {
+            excludedPercent = 0;
+        } else if (excludedPercent >= 1) {
+            excludedPercent = 1;
+        }
+
+        return excludedPercent / 2 * simulationSurfaceWidth + Helper.randomDouble(simulationSurfaceWidth * (1 - excludedPercent));
     }
 }

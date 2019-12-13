@@ -3,21 +3,19 @@ package de.hhn.it.ui;
 import de.hhn.it.simulation.*;
 import javafx.animation.Timeline;
 import javafx.event.EventHandler;
-import javafx.scene.Group;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
+import javafx.scene.text.*;
 import javafx.stage.Stage;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.List;
 
 /**
  * Mit dem UiManager können Simulationsteilnehmer auf die Simulationsoberfläche
@@ -27,26 +25,28 @@ import java.util.List;
  * gesetzt werden.
  */
 public class UiManager {
-    private final Pane root;
     private final Stage stage;
+    private final Pane root;
+    private final Pane controlPane;
+    private final ScrollPane scrollPane;
     private final Group bottomGroup = new Group();
     private final Group middleGroup = new Group();
     private final Group topGroup = new Group();
-    private final Group controlGroup = new Group();
     private final Map<SimulationMember, Group> simulationMembersOnGroup = new HashMap<>();
     private Simulation simulation;
     private Timeline mainAnimation;
     private LegAnimation legAnimation;
-    private boolean paused;
+    private boolean isPaused;
 
     /**
-     * @param scene nicht {@code null}
+     * @param stage nicht {@code null}
      * @param root  nicht {@code null}
      */
-    UiManager(Scene scene, Pane root, Stage stage) {
+    UiManager(Stage stage, Pane root, Pane controlPane, ScrollPane scrollPane) {
+        this.stage = Objects.requireNonNull(stage);
         this.root = Objects.requireNonNull(root);
-        this.stage = stage;
-        this.paused = false;
+        this.controlPane = controlPane;
+        this.scrollPane = scrollPane;
 
         root.getChildren().add(bottomGroup);
         root.getChildren().add(middleGroup);
@@ -499,7 +499,6 @@ public class UiManager {
         if (mainAnimation != null && legAnimation != null) {
             mainAnimation.pause();
             legAnimation.pause();
-            paused = true;
         } else
             throw new IllegalStateException("main animation or leg animation not set");
     }
@@ -512,7 +511,6 @@ public class UiManager {
         if (mainAnimation != null && legAnimation != null) {
             mainAnimation.play();
             legAnimation.play();
-            paused = false;
         } else
             throw new IllegalStateException("main animation or leg animation not set");
     }
@@ -534,16 +532,13 @@ public class UiManager {
     }
 
     private void initButtons() {
-        Background background = new Background(new BackgroundFill(Color.OLIVE,new CornerRadii(10),null));
-
         Button button = new Button();
 
         button.setText("Fullscreen");
-        button.setBackground(background);
-        button.setFont(Font.font(null,FontWeight.BOLD,15));
+        button.setBackground(Background.EMPTY);
+        button.setPrefSize(100, 25);
+        button.setFont(Font.font(null, FontWeight.BOLD, 15));
         button.setOnAction(E -> stage.setFullScreen(!stage.isFullScreen()));
-
-        controlGroup.getChildren().add(button);
 
         ImageView pauseSign = new ImageView();
         ImageView playSign = new ImageView();
@@ -553,19 +548,32 @@ public class UiManager {
         Button pauseButton = new Button();
 
         pauseButton.setGraphic(pauseSign);
-        pauseButton.setBackground(background);
-        pauseButton.setLayoutX(100);
+        pauseButton.setPrefSize(25, 25);
+        pauseButton.setBackground(Background.EMPTY);
+        pauseButton.setTranslateX(95);
+
+        isPaused = false;
         pauseButton.setOnAction(E -> {
-            if (paused) {
+            if (isPaused) {
                 playSimulation();
                 pauseButton.setGraphic(pauseSign);
+                isPaused = false;
             } else {
                 pauseSimulation();
                 pauseButton.setGraphic(playSign);
+                isPaused = true;
             }
         });
 
-        controlGroup.getChildren().add(pauseButton);
-        root.getChildren().add(controlGroup);
+        Slider slider = new Slider(1 / AntApplication.getSCALE(), 1, 1);
+        slider.setPrefSize(125, 25);
+        slider.setTranslateY(30);
+        root.scaleXProperty().bind(slider.valueProperty());
+        root.scaleYProperty().bind(slider.valueProperty());
+        slider.setBackground(Background.EMPTY);
+
+        Group controlGroup = new Group(pauseButton, button, slider);
+
+        controlPane.getChildren().add(controlGroup);
     }
 }
