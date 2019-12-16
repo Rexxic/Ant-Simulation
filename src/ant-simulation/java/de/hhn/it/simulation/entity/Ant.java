@@ -1,5 +1,6 @@
-package de.hhn.it.simulation;
+package de.hhn.it.simulation.entity;
 
+import de.hhn.it.simulation.Genome;
 import de.hhn.it.ui.AntModelGraphic;
 import javafx.scene.paint.Color;
 
@@ -17,12 +18,13 @@ public class Ant extends Animal {
     private boolean carriesFood;
     private boolean isFigther;
 
-    public Ant(double x, double y, double rotation, Color color, boolean isFigther) {
-        super(x, y, rotation, null);
+    public Ant(double x, double y, double rotation, Color color, boolean isFigther, Genome genome) {
+        super(x, y, rotation, null, genome);
+
         Color bc = !isFigther ? color : color.invert();
-        javafx.scene.paint.Color headColor = javafx.scene.paint.Color.color(color.getRed() / 5, color.getGreen() / 5, color.getBlue() / 5, 1.0);
-        javafx.scene.paint.Color bodyColor1 = javafx.scene.paint.Color.color(bc.getRed() / 2, bc.getGreen() / 2, bc.getBlue() / 2, 1.0);
-        javafx.scene.paint.Color bodyColor2 = javafx.scene.paint.Color.color(color.getRed() / 3, color.getGreen() / 3, color.getBlue() / 3, 1.0);
+        Color headColor = javafx.scene.paint.Color.color(color.getRed() / 5, color.getGreen() / 5, color.getBlue() / 5, 1.0);
+        Color bodyColor1 = javafx.scene.paint.Color.color(bc.getRed() / 2, bc.getGreen() / 2, bc.getBlue() / 2, 1.0);
+        Color bodyColor2 = javafx.scene.paint.Color.color(color.getRed() / 3, color.getGreen() / 3, color.getBlue() / 3, 1.0);
         this.graphic = new AntModelGraphic(color, color, headColor, bodyColor1, bodyColor2, javafx.scene.paint.Color.rgb(64, 255, 0, 1.0));
 
         this.antText = null;

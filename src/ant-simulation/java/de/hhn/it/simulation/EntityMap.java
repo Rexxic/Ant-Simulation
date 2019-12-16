@@ -1,7 +1,8 @@
 package de.hhn.it.simulation;
 
+import de.hhn.it.simulation.entity.SimulationMember;
+
 import java.util.ArrayList;
-import java.util.List;
 
 public class EntityMap {
     private ArrayList<SimulationMember>[][] allEntityMap;

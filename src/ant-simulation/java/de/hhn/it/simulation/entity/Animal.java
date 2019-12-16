@@ -1,24 +1,40 @@
-package de.hhn.it.simulation;
+package de.hhn.it.simulation.entity;
 
+import de.hhn.it.simulation.Genome;
+import de.hhn.it.simulation.Helper;
+import de.hhn.it.simulation.Simulation;
 import de.hhn.it.ui.ImageFileGraphic;
 
 public abstract class Animal extends SimulationMember {
     private static final double SURFACE_HEIGHT = Simulation.getSimulationSurfaceHeight();
     private static final double SURFACE_WIDTH = Simulation.getSimulationSurfaceWidth();
+    private final Genome genome;
 
     private boolean reachedTarget;
     protected boolean hasTarget;
     private double targetX;
     private double targetY;
-    private double step = 1;
+    private double step;
+    private float healthPoints;
+    private int cooldown;
+    private int stun;
 
-    public Animal(double x, double y, double rotation, ImageFileGraphic graphic) {
+    private int nearTargetDistance;
+
+    public Animal(double x, double y, double rotation, ImageFileGraphic graphic, Genome genome) {
         super(x, y, rotation, graphic);
+
+        this.genome = genome;
+
+        step = genome.getMovementSpeed();
+        healthPoints = genome.getHealthPoints();
 
         this.reachedTarget = false;
         this.hasTarget = false;
         this.targetX = -50;
         this.targetY = -50;
+
+        nearTargetDistance = 5;
     }
 
     protected void rotationManipulator() {
@@ -35,28 +51,28 @@ public abstract class Animal extends SimulationMember {
         double navCos = Math.cos(Helper.degreeToRadian(super.rotation));
         double navSin = Math.sin(Helper.degreeToRadian(super.rotation));
 
-        if (((SURFACE_HEIGHT * 0.075) > super.y) && (navSin > -0.25)) {
+        if ((50 > super.y) && (navSin > -0.25)) {
             if (navCos < 0) {
                 super.rotation += 2 * rnd;
             } else if (navCos >= 0) {
                 super.rotation -= rnd;
             }
 
-        } else if (((SURFACE_HEIGHT * 0.925) < super.y) && (navSin < 0.25)) {
+        } else if ((SURFACE_HEIGHT - 50 < super.y) && (navSin < 0.25)) {
             if (navCos < 0) {
                 super.rotation -= 2 * rnd;
             } else if (navCos >= 0) {
                 super.rotation += rnd;
             }
 
-        } else if (((SURFACE_WIDTH * 0.05) > super.x) && (navCos < 0.25)) {
+        } else if ((50 > super.x) && (navCos < 0.25)) {
             if (navSin > 0) {
                 super.rotation -= 2 * rnd;
             } else if (navSin <= 0) {
                 super.rotation += 2 * rnd;
             }
 
-        } else if (((SURFACE_WIDTH * 0.95) < super.x) && (navCos > -0.25)) {
+        } else if ((SURFACE_WIDTH - 50 < super.x) && (navCos > -0.25)) {
             if (navSin > 0) {
                 super.rotation += 2 * rnd;
             } else if (navSin <= 0) {
@@ -74,7 +90,7 @@ public abstract class Animal extends SimulationMember {
             super.rotation += Helper.randomDoubleUpperLowerBound(5);
         }
 
-        if (Helper.distance(targetX - super.x, targetY - super.y) < 5) {
+        if (Helper.distance(targetX - super.x, targetY - super.y) < nearTargetDistance) {
             reachedTarget = true;
         }
     }
@@ -89,8 +105,16 @@ public abstract class Animal extends SimulationMember {
      * Bewegt das Tier einen STEP in die Richtung in die es schaut.
      */
     protected void stepForward() {
-        super.x += (Math.cos(Helper.degreeToRadian(super.rotation)) * step);
-        super.y += (-Math.sin(Helper.degreeToRadian(super.rotation)) * step);
+        if (stun == 0) {
+            super.x += (Math.cos(Helper.degreeToRadian(super.rotation)) * step);
+            super.y += (-Math.sin(Helper.degreeToRadian(super.rotation)) * step);
+        }
+        if (cooldown > 0) {
+            cooldown--;
+        }
+        if (stun > 0) {
+            stun--;
+        }
     }
 
     /**
@@ -101,7 +125,7 @@ public abstract class Animal extends SimulationMember {
      *                    <p>
      *                    Diese Methode dreht die Ameise schrittweise in Richtung der relativen Koordinaten.
      */
-    protected void turnTo(double diffX, double diffY, double rnd, int rndOffset) {
+    protected void turnTo(double diffX, double diffY, double rnd, double rndOffset) {
         if (Math.sin(Math.toRadians(super.rotation + Helper.offset(diffX, diffY))) >= 0) {
             super.rotation -= rnd + rndOffset;
         } else {
@@ -113,7 +137,36 @@ public abstract class Animal extends SimulationMember {
         return reachedTarget;
     }
 
+    public void setlockTarget(boolean lock) {
+        hasTarget = lock;
+    }
+
     public void setStep(double step) {
         this.step = step;
+    }
+
+    public void setNearTargetDistance(int nearTargetDistance) {
+        this.nearTargetDistance = nearTargetDistance;
+    }
+
+    public boolean takeLethalDamage(float damageValue) {
+        healthPoints -= damageValue;
+        if (healthPoints <= 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean attack(Animal target) {
+        if (cooldown == 0) {
+            cooldown = Math.round(60 * genome.getAttackSpeed());
+            stun = 20;
+            return target.takeLethalDamage(genome.getAttackDamage());
+        }
+        return false;
+    }
+
+    public Genome getGenome() {
+        return genome;
     }
 }

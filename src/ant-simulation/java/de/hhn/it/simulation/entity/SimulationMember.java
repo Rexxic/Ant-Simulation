@@ -1,4 +1,4 @@
-package de.hhn.it.simulation;
+package de.hhn.it.simulation.entity;
 
 import de.hhn.it.ui.SimulationGraphic;
 

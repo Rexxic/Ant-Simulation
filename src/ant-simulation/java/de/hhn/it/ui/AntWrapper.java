@@ -1,7 +1,7 @@
 package de.hhn.it.ui;
 
-import de.hhn.it.simulation.Ant;
-import de.hhn.it.simulation.SimulationMember;
+import de.hhn.it.simulation.entity.Ant;
+import de.hhn.it.simulation.entity.SimulationMember;
 
 /**
  *

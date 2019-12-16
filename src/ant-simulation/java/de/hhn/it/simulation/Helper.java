@@ -11,8 +11,7 @@ import java.util.Random;
  */
 public class Helper {
     private static final Random random = new Random();
-    private static final int[] colorIndex = {randomInt(12)};
-    private static final int[] redColorIndex = {randomInt(1)};
+    private static final int[] colorIndex = {randomInt(24)};
 
     /**
      * @param upperBound obere Grenze der Zufallszahlen
@@ -20,7 +19,7 @@ public class Helper {
      * und der gegebenen oberen Grenze (exclusive)
      * @throws IllegalArgumentException wenn bound nicht positiv ist
      */
-    static int randomInt(int upperBound) {
+    public static int randomInt(int upperBound) {
         return random.nextInt(upperBound);
     }
 
@@ -29,7 +28,7 @@ public class Helper {
      * @return Eine gleich verteilte Pseudozufallszahl zwischen 0 (inklusive)
      * und der gegebenen oberen Grenze (exklusive)
      */
-    static double randomDouble(double upperBound) {
+    public static double randomDouble(double upperBound) {
         return random.nextDouble() * upperBound;
     }
 
@@ -38,7 +37,7 @@ public class Helper {
      * @return Eine gleich verteilte Pseudozufallszahl zwischen den gegebenen
      * Grenzen (inklusive)
      */
-    static double randomDoubleUpperLowerBound(double bounds) {
+    public static double randomDoubleUpperLowerBound(double bounds) {
         return random.nextDouble() * 2 * bounds - bounds;
     }
 
@@ -46,7 +45,7 @@ public class Helper {
      * @param degree der zu transformierende Wert in Grad
      * @return den berechneten Wert in Bogenmass
      */
-    static double degreeToRadian(double degree) {
+    public static double degreeToRadian(double degree) {
         return degree / 360 * 2 * Math.PI;
     }
 
@@ -62,7 +61,7 @@ public class Helper {
      * @param diffX,diffY die relative Position des Zieles zu unserem Ausgangsobjekt
      * @return gibt die tatsächliche Entfernung des Objekts zu der Position des Zieles zurück
      */
-    static double distance(double diffX, double diffY) {
+    public static double distance(double diffX, double diffY) {
         return Math.sqrt(diffX * diffX + diffY * diffY);
     }
 
@@ -70,7 +69,7 @@ public class Helper {
      * @param diffX,diffY die relative Position des Zieles zu unserem Ausgangsobjekt
      * @return errechnet den Winkel relativ zu 0° in dem der Zielpunkt liegt
      */
-    static double offset(double diffX, double diffY) {
+    public static double offset(double diffX, double diffY) {
         return Math.toDegrees(Math.atan2(diffY, diffX));
     }
 
@@ -78,22 +77,15 @@ public class Helper {
      * Diese Methode bei jedem Aufruf eine andere der im Array color abgespeicherten Farben aus, um sicherzustellen das sich
      * die Farben nicht allzu ähnlich sind. Momentan sind 14 verschiedene Farben eingetragen.
      */
-    static Color nxtColor() {
-        Color[] color = {Color.BLUE,  Color.OLIVEDRAB, Color.WHITESMOKE, Color.BLACK, Color.YELLOW, Color.BROWN,
-                Color.ORANGE, Color.DARKVIOLET, Color.GREEN, Color.INDIGO, Color.GOLDENROD, Color.DARKCYAN};
-        if (colorIndex[0] >= 11) {
+    public static Color nxtColor() {
+        Color[] color = {Color.BLUE, Color.OLIVEDRAB, Color.WHITESMOKE, Color.BLACK, Color.YELLOW, Color.BROWN,
+                Color.ORANGE, Color.DARKVIOLET, Color.GREEN, Color.INDIGO, Color.GOLDENROD, Color.DARKCYAN, Color.RED,
+                Color.DARKRED, Color.DARKCYAN, Color.DARKVIOLET, Color.DARKBLUE, Color.DARKGOLDENROD, Color.DARKGRAY,
+                Color.DARKGREEN, Color.DARKKHAKI, Color.DARKMAGENTA, Color.DARKORCHID, Color.DARKSEAGREEN, Color.DARKTURQUOISE};
+        if (colorIndex[0] >= 24) {
             colorIndex[0] = -1;
         }
         colorIndex[0]++;
         return color[colorIndex[0]];
-    }
-
-    static Color redColor() {
-        Color[] color = {Color.RED};
-        if (redColorIndex[0] >= 0) {
-            redColorIndex[0] = -1;
-        }
-        redColorIndex[0]++;
-        return color[redColorIndex[0]];
     }
 }

@@ -1,5 +1,6 @@
 package de.hhn.it.simulation;
 
+import de.hhn.it.simulation.entity.*;
 import de.hhn.it.ui.AntApplication;
 import de.hhn.it.ui.UiManager;
 import javafx.scene.paint.Color;
@@ -18,10 +19,10 @@ import java.util.List;
  */
 public class Simulation {
     private static final int ANTHILL_COUNT = 5;
-    private static final int FOOD_COUNT = 20;
+    private static final int FOOD_COUNT = 25;
     private static final int MIN_ANT_COUNT = 200;
-    private static final int MAX_ANT_COUNT = 800;
-    private static final int NATURAL_ENEMY_COUNT = 4;
+    private static final int MAX_ANT_COUNT = 1000;
+    private static final int NATURAL_ENEMY_COUNT = 2;
     private static final int FIELD_OF_VIEW = 150;
     private static final int FOOD_STASH_MULTIPLICAND = 5;
 
@@ -32,6 +33,7 @@ public class Simulation {
     private ArrayList<Food> foodArrayList;
     private ArrayList<AntHill> antHillList;
     private ArrayList<NaturalEnemy> naturalEnemyList;
+    private ArrayList<Queen> queenList;
     private HashMap<Ant, Ant[]> antAntArrayHashMap;
     private HashMap<Ant, Food> antFoodHashMap;
     private HashMap<Animal, Animal> predatorHashMap;
@@ -42,6 +44,7 @@ public class Simulation {
         this.foodArrayList = new ArrayList<>();
         this.antHillList = new ArrayList<>();
         this.naturalEnemyList = new ArrayList<>();
+        this.queenList = new ArrayList<>();
 
         this.antAntArrayHashMap = new HashMap<>();
         this.antFoodHashMap = new HashMap<>();
@@ -56,13 +59,14 @@ public class Simulation {
             int startSize = MIN_ANT_COUNT / ANTHILL_COUNT + Helper.randomInt(10);
 
             Color color = Helper.nxtColor();
-            AntHill antHill = new AntHill(x, y, Helper.randomInt(180) - 90, color, startSize * 10);
+            Genome genome = new Genome();
+            AntHill antHill = new AntHill(x, y, Helper.randomInt(180) - 90, color, Math.round(startSize * genome.getFoodConsumption()), genome);
             antHillList.add(antHill);
             uiManager.add(antHill);
 
             List<Ant> newAntList = new ArrayList<>();
             for (int count = 0; count < startSize; count++) {
-                Ant ant = new Ant(x, y, Helper.randomDouble(360), color, false);
+                Ant ant = new Ant(x, y, Helper.randomDouble(360), color, false, antHill.getGenome());
                 newAntList.add(ant);
                 uiManager.add(ant);
             }
@@ -101,28 +105,56 @@ public class Simulation {
                 foodArrayList.add(food);
             }
         }
-
+        ArrayList<AntHill> deleteAntHillList = new ArrayList<>();
         for (AntHill antHill : antHillList) {
-            antCount[0] = createChildren(antHill, antCount[0]);
             List<Ant> antHillAntList = antHill.getAntList();
             allAntArrayList.removeAll(antHillAntList);
-            for (Ant ant : antHillAntList) {
-                if (ant.isFigther()) {
-                    updateAntAntArrayHashMap(ant, antHillAntList);
-                    updatePredatorHashMap(ant, allAntArrayList);
-                    fighterAntMovementHandler(ant, antHill);
-                } else {
-                    updateAntAntArrayHashMap(ant, antHillAntList);
-                    updateAntFoodHashMap(ant);
-                    commonAntMovementHandler(ant, antHill);
+            if (antHill.isTerminateHill()) {
+                terminateAntHill(antHill);
+                deleteAntHillList.add(antHill);
+            } else {
+                antCount[0] = createChildren(antHill, antCount[0]);
+                for (Ant ant : antHillAntList) {
+                    if (ant.isFigther()) {
+                        updateAntAntArrayHashMap(ant, antHillAntList);
+                        updatePredatorHashMap(ant, allAntArrayList);
+                        fighterAntMovementHandler(ant, antHill);
+                    } else {
+                        updateAntAntArrayHashMap(ant, antHillAntList);
+                        updateAntFoodHashMap(ant);
+                        commonAntMovementHandler(ant, antHill);
+                    }
                 }
+                allAntArrayList.addAll(antHillAntList);
+                antHill.doSimulationStep();
             }
-            allAntArrayList.addAll(antHillAntList);
-            antHill.doSimulationStep();
+        }
+        for (AntHill antHill : deleteAntHillList) {
+            antHillList.remove(antHill);
+            uiManager.remove(antHill);
         }
 
-        for(NaturalEnemy naturalEnemy : naturalEnemyList) {
+        for (NaturalEnemy naturalEnemy : naturalEnemyList) {
+            updatePredatorHashMap(naturalEnemy, allAntArrayList);
+            naturalEnemyMovementHandler(naturalEnemy);
+            naturalEnemyCreateChildren(naturalEnemy);
             naturalEnemy.doSimulationStep();
+        }
+
+        ArrayList<Queen> deleteQueenList = new ArrayList<>();
+        for (Queen queen : queenList) {
+            if (queen.isNearTarget()) {
+                deleteQueenList.add(queen);
+            } else {
+                queen.doSimulationStep();
+            }
+        }
+        for (Queen queen : deleteQueenList) {
+            AntHill antHill = new AntHill(queen.getX(), queen.getY(), queen.getRotation(), queen.getColor(), queen.getStash(), queen.getGenome());
+            antHillList.add(antHill);
+            uiManager.add(antHill);
+            queenList.remove(queen);
+            uiManager.remove(queen);
         }
     }
 
@@ -133,11 +165,11 @@ public class Simulation {
             if (antList.size() <= antCountDiff) {
                 antList.forEach(Ant -> uiManager.add(Ant));
                 antHill.giveAntList(antList);
-                antCount += antCountDiff;
+                antCount += antList.size();
             } else {
                 antList.subList(0, antCountDiff).forEach(Ant -> uiManager.add(Ant));
                 antHill.giveAntList(antList.subList(0, antCountDiff));
-                antCount += antList.size();
+                antCount += antCountDiff;
             }
         }
         return antCount;
@@ -204,15 +236,14 @@ public class Simulation {
             ant.isCarryingFood(false);
             antHill.giveFood();
         } else if (ant.isNearTarget()) {
-            if (food != null && foodArrayList.contains(food) && food.takeFood()) {
+            if (food != null && foodArrayList.contains(food) && food.takeFood(ant.getGenome().getCapacity())) {
                 ant.isCarryingFood(true);
-                if (!food.hasFood()) {
-                    antFoodHashMap.remove(ant);
-                    uiManager.remove(food);
-                    foodArrayList.remove(food);
-                    food = null;
-                    ant.setNewTarget(-50, -50);
-                }
+            } else if (food != null && foodArrayList.contains(food) && !food.hasFood()) {
+                antFoodHashMap.remove(ant);
+                uiManager.remove(food);
+                foodArrayList.remove(food);
+                food = null;
+                ant.setNewTarget(-50, -50);
             } else {
                 antFoodHashMap.remove(ant);
                 food = null;
@@ -223,14 +254,12 @@ public class Simulation {
         antSetTarget(ant, food, antHill);
     }
 
-    SimulationMember finalTarget;
-
     public void fighterAntMovementHandler(Ant ant, AntHill antHill) {
-        Ant target;
-        if (predatorHashMap.containsKey(ant) && predatorHashMap.get(ant).getClass() == Ant.class) {
+        Ant target = null;
+        SimulationMember finalTarget = null;
+
+        if (predatorHashMap.containsKey(ant) && predatorHashMap.get(ant) instanceof Ant) {
             target = (Ant) predatorHashMap.get(ant);
-        } else {
-            target = null;
         }
 
         if (ant.isNearTarget() && ant.isCarryingFood()) {
@@ -238,13 +267,15 @@ public class Simulation {
             antHill.giveFood();
         } else if (target != null & !ant.isCarryingFood()) {
             if (calculateDistance(ant, target) <= 5) {
-                for (AntHill targetAntHill : antHillList) {
-                    if (targetAntHill.removeChildren(target)) {
-                        ant.isCarryingFood(true);
-                        predatorHashMap.remove(ant);
-                        uiManager.remove(target);
-                        target = null;
-                        break;
+                if (ant.attack(target)) {
+                    for (AntHill targetAntHill : antHillList) {
+                        if (targetAntHill.removeChildren(target)) {
+                            ant.isCarryingFood(true);
+                            predatorHashMap.remove(ant);
+                            uiManager.remove(target);
+                            target = null;
+                            break;
+                        }
                     }
                 }
             }
@@ -262,6 +293,49 @@ public class Simulation {
         antSetTarget(ant, finalTarget, antHill);
     }
 
+    public void naturalEnemyMovementHandler(NaturalEnemy naturalEnemy) {
+        Ant target = null;
+        if (predatorHashMap.containsKey(naturalEnemy) && predatorHashMap.get(naturalEnemy) instanceof Ant) {
+            target = (Ant) predatorHashMap.get(naturalEnemy);
+        }
+        if (!naturalEnemy.isSleeping()) {
+            if (target != null && naturalEnemy.isNearTarget()) {
+                if (calculateDistance(naturalEnemy, target) <= 10) {
+                    if (naturalEnemy.attack(target)) {
+                        for (AntHill targetAntHill : antHillList) {
+                            if (targetAntHill.removeChildren(target)) {
+                                naturalEnemy.addFood();
+                                predatorHashMap.remove(naturalEnemy);
+                                uiManager.remove(target);
+                                target = null;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (target != null) {
+                naturalEnemy.setNewTarget(target.getX(), target.getY());
+                naturalEnemy.setlockTarget(true);
+            } else {
+                naturalEnemy.setlockTarget(false);
+            }
+        }
+    }
+
+    private void naturalEnemyCreateChildren(NaturalEnemy naturalEnemy) {
+        if (naturalEnemy.isSleeping()) {
+            if (naturalEnemy.isAwakening()) {
+                List<Food> newFood = naturalEnemy.createChildren();
+                if (newFood != null) {
+                    Food food = newFood.get(0);
+                    foodArrayList.add(food);
+                    uiManager.add(food);
+                }
+            }
+        }
+    }
+
     private void antSetTarget(Ant ant, SimulationMember target, SimulationMember antHill) {
         if (target != null) {
             ant.lock(true);
@@ -271,6 +345,21 @@ public class Simulation {
         } else if (!ant.isCarryingFood()) {
             ant.lock(false);
         } else ant.setNewTarget(antHill.getX(), antHill.getY());
+    }
+
+    private void terminateAntHill(AntHill antHill) {
+        int antHillWorkers = 0;
+        for (Ant ant : antHill.getAntList()) {
+            antHillWorkers++;
+            uiManager.remove(ant);
+        }
+        int newQueen = Math.round(antHillWorkers / (antHill.getGenome().getFoodConsumption() * 4));
+        for (int i = 0; i < newQueen; i++) {
+            Queen queen = new Queen(antHill.getX(), antHill.getY(), Helper.randomDouble(360), Helper.nxtColor(), Math.round(antHillWorkers / (float) newQueen), antHill.getGenome());
+            queen.setNewTarget(rndWidth(1 / 16f), rndHeight(1 / 9f));
+            queenList.add(queen);
+            uiManager.add(queen);
+        }
     }
 
     public double calculateDistance(SimulationMember member1, SimulationMember member2) {

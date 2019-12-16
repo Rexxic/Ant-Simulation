@@ -1,6 +1,10 @@
 package de.hhn.it.ui;
 
 import de.hhn.it.simulation.*;
+import de.hhn.it.simulation.entity.Ant;
+import de.hhn.it.simulation.entity.AntHill;
+import de.hhn.it.simulation.entity.Food;
+import de.hhn.it.simulation.entity.SimulationMember;
 import javafx.animation.Timeline;
 import javafx.event.EventHandler;
 import javafx.scene.*;

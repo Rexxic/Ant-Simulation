@@ -1,5 +1,8 @@
-package de.hhn.it.simulation;
+package de.hhn.it.simulation.entity;
 
+import de.hhn.it.simulation.Genome;
+import de.hhn.it.simulation.Helper;
+import de.hhn.it.simulation.Reproduce;
 import de.hhn.it.ui.ImageFileGraphic;
 
 import java.util.ArrayList;
@@ -8,18 +11,24 @@ import java.util.List;
 public class NaturalEnemy extends Animal implements Reproduce<Food> {
     private int stash;
     private int sleep;
+    private int maxStash;
 
     public NaturalEnemy(double x, double y, double rotation) {
-        super(x, y, rotation, new ImageFileGraphic("bug.png"));
+        super(x, y, rotation, new ImageFileGraphic("bug.png"), new Genome());
         this.stash = 0;
         this.sleep = 0;
+        maxStash = 50 + Helper.randomInt(50);
         this.setStep(1.5);
+        setNearTargetDistance(10);
     }
 
     public void doSimulationStep() {
         super.rotationManipulator();
         if (sleep <= 0) {
             super.stepForward();
+            if (stash > maxStash) {
+                sleep = 10*stash;
+            }
         } else {
             sleep--;
         }
@@ -30,7 +39,7 @@ public class NaturalEnemy extends Animal implements Reproduce<Food> {
     }
 
     public boolean isAwakening() {
-        return sleep < 20;
+        return sleep < 20 && sleep > 0;
     }
 
     @Override
@@ -42,5 +51,18 @@ public class NaturalEnemy extends Animal implements Reproduce<Food> {
             return newFood;
         }
         return null;
+    }
+
+    public void addFood() {
+        stash += 6 + Helper.randomInt(4);
+    }
+
+    @Override
+    public String getText() {
+        if (isSleeping()) {
+            return "Sleeping...";
+        } else {
+            return "Stash: " + stash;
+        }
     }
 }

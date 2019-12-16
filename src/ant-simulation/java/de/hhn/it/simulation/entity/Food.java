@@ -1,5 +1,6 @@
-package de.hhn.it.simulation;
+package de.hhn.it.simulation.entity;
 
+import de.hhn.it.simulation.Helper;
 import de.hhn.it.ui.ImageFileGraphic;
 
 public class Food extends SimulationMember {
@@ -14,17 +15,13 @@ public class Food extends SimulationMember {
         this.hasFood = true;
     }
 
-    boolean hasFood() {
+    public boolean hasFood() {
         return hasFood;
     }
 
-    boolean takeFood() {
-        if (stash > 1) {
-            stash--;
-            return true;
-        } else if (stash == 1) {
-            stash--;
-            hasFood = false;
+    public boolean takeFood(int amount) {
+        if (stash > amount) {
+            stash-=amount;
             return true;
         } else {
             hasFood = false;

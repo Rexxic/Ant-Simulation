@@ -26,7 +26,7 @@ public class AntApplication extends Application {
     /**
      * Length of each simulation frame in milliseconds.
      */
-    public static final int SIMULATION_FRAME_LENGTH = 1000 / 50;
+    public static final int SIMULATION_FRAME_LENGTH = 1000 / 60;
     /*
      * Increase SCALE if you want a bigger
      * surface

@@ -1,6 +1,6 @@
 package de.hhn.it.ui;
 
-import de.hhn.it.simulation.SimulationMember;
+import de.hhn.it.simulation.entity.SimulationMember;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
