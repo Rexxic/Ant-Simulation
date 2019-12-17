@@ -4,10 +4,14 @@ import de.hhn.it.simulation.Genome;
 import de.hhn.it.simulation.Helper;
 import de.hhn.it.simulation.Reproduce;
 import de.hhn.it.ui.ImageFileGraphic;
-
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @Author Cedric Seiz
+ * Ein natürlicher Fressfeind der Ameisen, er schläft wenn er vollgefressen ist und produziert einen Futterhaufen
+ * wenn er ausgeschlafen ist.
+ */
 public class NaturalEnemy extends Animal implements Reproduce<Food> {
     private int stash;
     private int sleep;

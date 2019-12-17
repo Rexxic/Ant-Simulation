@@ -63,18 +63,19 @@ public class AntModelGraphic extends SimulationGraphic {
      * @param rearColor     not {@code null}
      * @param foodColor     not {@code null}
      */
-    public AntModelGraphic(Color legColor, Color antennaeColor, Color headColor, Color middleColor, Color rearColor, Color foodColor) {
-        this(getBuilder(legColor, antennaeColor, headColor, middleColor, rearColor, foodColor));
+    public AntModelGraphic(Color legColor, Color antennaeColor, Color headColor, Color middleColor, Color rearColor, Color foodColor, double scale) {
+        this(getBuilder(legColor, antennaeColor, headColor, middleColor, rearColor, foodColor), scale);
+
     }
 
     /**
      * {@link AntModelGraphic} with default colors
      */
     public AntModelGraphic() {
-        this(BUILDERS.get(DEFAULT));
+        this(BUILDERS.get(DEFAULT), 1);
     }
 
-    private AntModelGraphic(AntModelGraphicBuilder modelBuilder) {
+    private AntModelGraphic(AntModelGraphicBuilder modelBuilder, double scale) {
         Node frontLeftLeg = modelBuilder.getFrontLeftLeg();
         Node frontRightLeg = modelBuilder.getFrontRightLeg();
         Node middleLeftLeg = modelBuilder.getMiddleLeftLeg();
@@ -106,6 +107,8 @@ public class AntModelGraphic extends SimulationGraphic {
         antNode.setTranslateX(-ANT_CENTER_X);
         antNode.setTranslateY(-ANT_CENTER_Y);
         antNode.getStyleClass().add("ant");
+        antNode.setScaleX(scale);
+        antNode.setScaleY(scale);
         textNode.getStyleClass().add("ant-text");
 
         antNode.setCacheHint(CacheHint.ROTATE);

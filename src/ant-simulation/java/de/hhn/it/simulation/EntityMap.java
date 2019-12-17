@@ -3,26 +3,35 @@ package de.hhn.it.simulation;
 import de.hhn.it.simulation.entity.SimulationMember;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class EntityMap {
     private ArrayList<SimulationMember>[][] allEntityMap;
+    private HashMap<SimulationMember,int[]> register;
     private int arraySizeX;
     private int arraySizeY;
 
     public EntityMap(int gridWidth, int gridLength) {
+        this.allEntityMap = new ArrayList[gridLength][gridWidth];
+        this.register = new HashMap<>();
         this.arraySizeX = gridWidth;
         this.arraySizeY = gridLength;
-
-        this.allEntityMap = new ArrayList[gridWidth][gridLength];
     }
 
     public void put(SimulationMember simulationMember) {
         int x = calcFieldX(simulationMember);
         int y = calcFieldY(simulationMember);
+        if(register.containsKey(simulationMember)) {
+            int[] coords = register.get(simulationMember);
+            register.remove(simulationMember);
+            allEntityMap[coords[0]][coords[1]].remove(simulationMember);
+        }
         allEntityMap[x][y].add(simulationMember);
+        register.put(simulationMember, new int[]{x, y});
     }
-/*
-    public List<SimulationMember> getNearAntList(SimulationMember simulationMember,SimulationMember filterClass) {
+
+    public List<SimulationMember> getNearAntList(SimulationMember simulationMember, Class filterClass) {
         int x = calcFieldX(simulationMember);
         int y = calcFieldY(simulationMember);
 
@@ -53,23 +62,20 @@ public class EntityMap {
             yEnd = y + 2;
         }
 
-        List<filterClass.getClas> outputList = new ArrayList<>();
+        List<SimulationMember> outputList = new ArrayList<>();
 
         while (xCount < xEnd) {
             while (yCount < yEnd) {
-                allEntityMap[x][y].forEach(Ant -> {if(Ant.getClass() == filterClass.getClass());});
+                allEntityMap[x][y].forEach(C -> {
+                    if(C.getClass().equals(filterClass)) {
+                        outputList.add(C);
+                    }});
                 yCount++;
             }
             xCount++;
         }
         return outputList;
     }
-
-    private int normalicedEnd(int xy) {
-
-    }
-
- */
 
     private int calcFieldX(SimulationMember simulationMember) {
         return Math.floorDiv((int) simulationMember.getX(), arraySizeX);

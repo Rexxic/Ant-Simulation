@@ -74,8 +74,8 @@ public class Simulation {
         }
 
         for (int b = 0; b < NATURAL_ENEMY_COUNT; b++) {
-            double x = rndWidth(50 / simulationSurfaceWidth);
-            double y = rndHeight(50 / simulationSurfaceHeight);
+            double x = rndWidth(0.5 / 16);
+            double y = rndHeight(0.5 / 16);
             NaturalEnemy naturalEnemy = new NaturalEnemy(x, y, Helper.randomDouble(360));
             naturalEnemyList.add(naturalEnemy);
             uiManager.add(naturalEnemy);
@@ -83,7 +83,8 @@ public class Simulation {
     }
 
     /**
-     * Führt einen Simulationsschritt durch.
+     * Führt einen Simulationsschritt für jedes Mitglied der Simulation durch und führt sonstige Befehle aus die
+     * jeden Simulationsschritt ausgeführt werden müssen.
      */
     public void doSimulationStep() {
         final int[] antCount = {0};
@@ -97,8 +98,8 @@ public class Simulation {
 
         if (antCount[0] != 0) {
             while (foodArrayList.size() < FOOD_COUNT) {
-                double x = rndWidth(50 / simulationSurfaceWidth);
-                double y = rndHeight(50 / simulationSurfaceHeight);
+                double x = rndWidth(0.5 / 16);
+                double y = rndHeight(0.5 / 16);
 
                 Food food = new Food(x, y, 10 + Helper.randomInt(antCount[0] / FOOD_COUNT * FOOD_STASH_MULTIPLICAND));
                 uiManager.add(food);
@@ -158,6 +159,12 @@ public class Simulation {
         }
     }
 
+    /**
+     * Fragt bei einem Ameisenhaufen die Methode des Reproduce-Interfaces ab und erzeugt diese Liste an Ameisen,
+     * wenn die Gesamtameisenzahl der Simulation nicht überschritten wird.
+     * @param antCount Der aktuelle Stand des Zählers
+     * @return Zähler plus die Menge an Ameisen die hinzuhgefüg wurden.
+     */
     public int createChildren(AntHill antHill, int antCount) {
         List<Ant> antList = antHill.createChildren();
         int antCountDiff = MAX_ANT_COUNT - antCount;
@@ -175,6 +182,10 @@ public class Simulation {
         return antCount;
     }
 
+    /**
+     * Updated die Hashmap AntAntArryHashMap, welche für jede Ameise ein Array aus 5 Ameisen beinhaltet und die
+     * für jede Ameise sichtbaren Ameisen bereithält.
+     */
     public void updateAntAntArrayHashMap(Ant ant, List<Ant> antList) {
         int count = 0;
         Ant[] antArray = new Ant[5];
@@ -190,6 +201,9 @@ public class Simulation {
         antAntArrayHashMap.put(ant, antArray);
     }
 
+    /**
+     * Hält für die Jäger der Simulation das Ziel das am nächsten und in Sichtweite ist bereit.
+     */
     public void updatePredatorHashMap(Animal animal, List<Animal> targetList) {
         double minDistance = FIELD_OF_VIEW;
         boolean somethingNear = false;
@@ -206,6 +220,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Map die für jede Ameise einen Futterhaufen verlinkt den sie sich gemerkt hat.
+     */
     public void updateAntFoodHashMap(Ant ant) {
         if (!antFoodHashMap.containsKey(ant)) {
             for (Food food : foodArrayList) {
@@ -217,6 +234,11 @@ public class Simulation {
         }
     }
 
+    /**
+     * Schaltet je nachdem ob die Ameise ein Ziel oder Futter hat oder weis wo sich futter befindet zwischen laufe zum Futter,
+     * laufe zum Ameisenhaufen und laufe zufällig herum um. Ausserdem wird der Standort von Futter von anderen Ameisen Abgefragt
+     * wenn für die Ameise selbst keines bekannt ist.
+     */
     public void commonAntMovementHandler(Ant ant, AntHill antHill) {
         if (!antFoodHashMap.containsKey(ant)) {
             for (Ant nearAnt : antAntArrayHashMap.get(ant)) {
@@ -233,11 +255,11 @@ public class Simulation {
         Food food = antFoodHashMap.get(ant);
 
         if (ant.isNearTarget() && ant.isCarryingFood()) {
-            ant.isCarryingFood(false);
+            ant.setCarryingFood(false);
             antHill.giveFood();
         } else if (ant.isNearTarget()) {
             if (food != null && foodArrayList.contains(food) && food.takeFood(ant.getGenome().getCapacity())) {
-                ant.isCarryingFood(true);
+                ant.setCarryingFood(true);
             } else if (food != null && foodArrayList.contains(food) && !food.hasFood()) {
                 antFoodHashMap.remove(ant);
                 uiManager.remove(food);
@@ -254,6 +276,10 @@ public class Simulation {
         antSetTarget(ant, food, antHill);
     }
 
+    /**
+     * Schaltet je nachdem ob die Ameise ein Ziel oder Futter hat zwischen laufe in die Richtung andere Ameisen,
+     * laufe zum Ameisenhaufen, greife das Ziel an und laufe zufällig herum um.
+     */
     public void fighterAntMovementHandler(Ant ant, AntHill antHill) {
         Ant target = null;
         SimulationMember finalTarget = null;
@@ -263,14 +289,14 @@ public class Simulation {
         }
 
         if (ant.isNearTarget() && ant.isCarryingFood()) {
-            ant.isCarryingFood(false);
+            ant.setCarryingFood(false);
             antHill.giveFood();
         } else if (target != null & !ant.isCarryingFood()) {
             if (calculateDistance(ant, target) <= 5) {
                 if (ant.attack(target)) {
                     for (AntHill targetAntHill : antHillList) {
                         if (targetAntHill.removeChildren(target)) {
-                            ant.isCarryingFood(true);
+                            ant.setCarryingFood(true);
                             predatorHashMap.remove(ant);
                             uiManager.remove(target);
                             target = null;

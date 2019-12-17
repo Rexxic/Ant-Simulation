@@ -8,6 +8,10 @@ public class Food extends SimulationMember {
     private int stash;
     private boolean hasFood;
 
+    /**
+     * @Author Cedric Seiz
+     * Diese Klasse stellt Futter in der Simulation dar.
+     */
     public Food(double x, double y, int stash) {
         super(x, y, Helper.randomInt(360), new ImageFileGraphic("food.png"));
         this.foodText = "Stash: ";
@@ -19,6 +23,10 @@ public class Food extends SimulationMember {
         return hasFood;
     }
 
+    /**
+     * @param amount Menge des Futters, das genommen wird.
+     * @return true wenn der Futterhaufen weiterexistiert, false wenn er leer ist und zerstört werden kann.
+     */
     public boolean takeFood(int amount) {
         if (stash > amount) {
             stash-=amount;

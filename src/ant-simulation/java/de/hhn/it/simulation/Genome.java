@@ -1,10 +1,16 @@
 package de.hhn.it.simulation;
 
+/**
+ * @Author Cedric Seiz
+ * Diese Klasse stellt ein Genom dar. Es beinhaltet verschiedene Werte die zufällig festgelegt werden,
+ * und die sich Simulationsteilnehmer alle auf einmal vererben könen.
+ */
 public class Genome {
     private final float speed;
     private final float healthPoints;
     private final int antLimit;
     private final float fighterRatio;
+    private final int threshold;
 
     private final int capacity;
     private final float attackDamage;
@@ -16,15 +22,19 @@ public class Genome {
         this.speed = 1 + (float) Helper.randomDouble(2);
         this.healthPoints = 3 + (float) Helper.randomDouble(7);
         this.antLimit = 50 + Helper.randomInt(50);
+        this.fighterRatio = 5 + (float) Helper.randomDoubleUpperLowerBound(2);
+        this.threshold = 10 + Helper.randomInt(30);
 
         this.capacity = Math.round(healthPoints / 3);
         this.attackDamage = healthPoints / 2;
         this.attackSpeed = 1 / speed;
         this.movementSpeed = speed * 2 / 3;
         this.foodConsumption = (speed * 2 + healthPoints) / 2;
-        this.fighterRatio = 5 + (float) Helper.randomDoubleUpperLowerBound(2);
     }
 
+    /**
+     * Ein alternativer Konstruktor, der genutzt werden kann um die Werte eines übergebenen Genoms zu übernehmen und leicht zu variieren.
+     */
     public Genome(Genome oldGenome) {
         float newSpeed = oldGenome.getSpeed() + (float) Helper.randomDoubleUpperLowerBound(0.1);
         if (newSpeed >= 3) {
@@ -44,6 +54,7 @@ public class Genome {
         }
         this.antLimit = oldGenome.getAntLimit() + Helper.randomInt(40) - 20;
         this.fighterRatio = oldGenome.getFighterRatio() + (float) Helper.randomDoubleUpperLowerBound(0.5);
+        this.threshold = oldGenome.getThreshold() + 10 - Helper.randomInt(20);
 
 
         this.capacity = Math.round(healthPoints / 3);
@@ -89,8 +100,15 @@ public class Genome {
         return foodConsumption;
     }
 
+    public int getThreshold() {
+        return threshold;
+    }
+
+    /**
+     * @return einen String den man zum anzeigen der Werte verwenden kann.
+     */
     public String getText() {
-        return "Ant Limit: " + antLimit + "\nFigthers: " + 1 / fighterRatio + "%" + "\nHP: " + healthPoints + "\nCapacity: " + capacity + "\nAttack Damage " + attackDamage +
+        return "Ant Limit: " + antLimit + "\nFigthers: " + 100 / fighterRatio + "%" + "\nThreshold: " + threshold + "\nHP: " + healthPoints + "\nCapacity: " + capacity + "\nAttack Damage " + attackDamage +
                 "\nAttack Speed: " + attackSpeed + "\nMovement Speed: " + movementSpeed + "\nFood Consumption: " + foodConsumption;
     }
 }

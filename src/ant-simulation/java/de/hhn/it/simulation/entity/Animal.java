@@ -5,6 +5,13 @@ import de.hhn.it.simulation.Helper;
 import de.hhn.it.simulation.Simulation;
 import de.hhn.it.ui.ImageFileGraphic;
 
+/**
+ * @Author: Cedric Seiz
+ * Diese Klasse stellt einem Tier sämtliche methoden zur verfügung die es in der simulation benötigt. Dazu gehört das sich
+ * innerhalb der Simulationsgrenzen bewegen, sich auf einen bestimmten Punkt zuzubewegen, sowie schaden nehmen und schaden
+ * an anderen Tieren verursachen.
+ */
+
 public abstract class Animal extends SimulationMember {
     private static final double SURFACE_HEIGHT = Simulation.getSimulationSurfaceHeight();
     private static final double SURFACE_WIDTH = Simulation.getSimulationSurfaceWidth();
@@ -37,6 +44,10 @@ public abstract class Animal extends SimulationMember {
         nearTargetDistance = 5;
     }
 
+    /**
+     * Methode um die Rotation der Ameise zu verändern. Sie verhindert das die Ameise sich aus den Simulationsgrenzen bewegt
+     * und lässt sie wenn sie ein Ziel hat sich auf dieses zubewegen.
+     */
     protected void rotationManipulator() {
         super.rotation = super.rotation % 360;
         if (super.rotation > 180) {
@@ -95,6 +106,9 @@ public abstract class Animal extends SimulationMember {
         }
     }
 
+    /**
+     * Methode setzt ein Ziel für die Ameise.
+     */
     public void setNewTarget(double targetX, double targetY) {
         this.targetX = targetX;
         this.targetY = targetY;
@@ -102,7 +116,8 @@ public abstract class Animal extends SimulationMember {
     }
 
     /**
-     * Bewegt das Tier einen STEP in die Richtung in die es schaut.
+     * Bewegt das Tier einen STEP in die Richtung in die es schaut. Verringert zudem die beiden Zähler Cooldown und Stun um 1 da diese
+     * Methode bei allem was sich bewegt ausgeführt wird.
      */
     protected void stepForward() {
         if (stun == 0) {
@@ -122,8 +137,8 @@ public abstract class Animal extends SimulationMember {
      * @param rnd         Wert um den das Tier pro Schritt gedreht wird
      * @param rndOffset   zur Verschiebung des Wertebereichs wenn es sich bei dem rnd Wert um einen zufällig generierten
      *                    Wert handelt
-     *                    <p>
-     *                    Diese Methode dreht die Ameise schrittweise in Richtung der relativen Koordinaten.
+     *
+     * Diese Methode dreht die Ameise schrittweise in Richtung der relativen Koordinaten.
      */
     protected void turnTo(double diffX, double diffY, double rnd, double rndOffset) {
         if (Math.sin(Math.toRadians(super.rotation + Helper.offset(diffX, diffY))) >= 0) {
@@ -149,14 +164,20 @@ public abstract class Animal extends SimulationMember {
         this.nearTargetDistance = nearTargetDistance;
     }
 
+    /**
+     * @param damageValue Verursachter Schaden
+     * @return True, wenn der Schaden die Healthpoints des Tieres unter 0 bringt.
+     */
     public boolean takeLethalDamage(float damageValue) {
         healthPoints -= damageValue;
-        if (healthPoints <= 0) {
-            return true;
-        }
-        return false;
+        return healthPoints <= 0;
     }
 
+    /**
+     * @param target Das anzugreifende Animal
+     * @return True wenn der Schaden für das angegriffene Animal tödlich ist.
+     * Nach jedem Angriff ist eine Tier für eine drittel Sekunde etwa unfähig sich zu bewegen.
+     */
     public boolean attack(Animal target) {
         if (cooldown == 0) {
             cooldown = Math.round(60 * genome.getAttackSpeed());

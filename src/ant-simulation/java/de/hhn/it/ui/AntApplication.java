@@ -60,7 +60,7 @@ public class AntApplication extends Application {
 
         Pane controllPane = new Pane();
         double controllPaneWidth = 135;
-        double controllPaneHeight = 60;
+        double controllPaneHeight = 35;
         controllPane.setPrefSize(controllPaneWidth, controllPaneHeight);
         controllPane.setBackground(new Background(new BackgroundFill(Color.DIMGRAY.deriveColor(1, 1, 1, 0.7), new CornerRadii(10), null)));
 

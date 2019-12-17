@@ -4,6 +4,12 @@ import de.hhn.it.simulation.Genome;
 import de.hhn.it.ui.AntModelGraphic;
 import javafx.scene.paint.Color;
 
+/**
+ * @Author Cedric Seiz
+ * Die Queen erbt ihr Genom von einem Ameisenhaufen und mutiert es. Sie bekommt von der Simulation ein Ziel gesetzt und
+ * "Verwandelt" sich in einen Ameisenhaufen den sie ihr Genom weitergibt wenn sie ihr Ziel erreicht hat (sie wird gelöscht
+ * und der Ameisenhaufen gespawnt).
+ */
 public class Queen extends Animal {
     private final AntModelGraphic graphic;
     private final Color color;
@@ -16,7 +22,8 @@ public class Queen extends Animal {
         Color headColor = javafx.scene.paint.Color.color(Color.GOLD.getRed() / 2, Color.GOLD.getGreen() / 3, Color.GOLD.getBlue() / 3, 1.0);
         Color bodyColor1 = javafx.scene.paint.Color.color(color.getRed() / 2, color.getGreen() / 2, color.getBlue() / 2, 1.0);
         Color bodyColor2 = javafx.scene.paint.Color.color(color.getRed() / 3, color.getGreen() / 3, color.getBlue() / 3, 1.0);
-        this.graphic = new AntModelGraphic(color, headColor, headColor, bodyColor1, bodyColor2, Color.rgb(64, 255, 0, 1.0));
+        double scale = 1 + (1 / 16f * (genome.getHealthPoints()));
+        this.graphic = new AntModelGraphic(color, headColor, headColor, bodyColor1, bodyColor2, Color.rgb(64, 255, 0, 1.0), scale);
 
         this.color = color;
         this.antText = null;

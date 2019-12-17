@@ -569,14 +569,7 @@ public class UiManager {
             }
         });
 
-        Slider slider = new Slider(1 / AntApplication.getSCALE(), 1, 1);
-        slider.setPrefSize(125, 25);
-        slider.setTranslateY(30);
-        root.scaleXProperty().bind(slider.valueProperty());
-        root.scaleYProperty().bind(slider.valueProperty());
-        slider.setBackground(Background.EMPTY);
-
-        Group controlGroup = new Group(pauseButton, button, slider);
+        Group controlGroup = new Group(pauseButton, button);
 
         controlPane.getChildren().add(controlGroup);
     }

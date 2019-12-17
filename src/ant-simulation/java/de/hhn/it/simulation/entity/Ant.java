@@ -5,6 +5,7 @@ import de.hhn.it.ui.AntModelGraphic;
 import javafx.scene.paint.Color;
 
 /**
+ * @Author: Cedric Seiz
  * Mit der Klasse {@link Ant} werden Ameisen in der Simulation funktional
  * abgebildet. Ameisen definieren ihre Position und Rotation (in Grad).
  *
@@ -25,7 +26,8 @@ public class Ant extends Animal {
         Color headColor = javafx.scene.paint.Color.color(color.getRed() / 5, color.getGreen() / 5, color.getBlue() / 5, 1.0);
         Color bodyColor1 = javafx.scene.paint.Color.color(bc.getRed() / 2, bc.getGreen() / 2, bc.getBlue() / 2, 1.0);
         Color bodyColor2 = javafx.scene.paint.Color.color(color.getRed() / 3, color.getGreen() / 3, color.getBlue() / 3, 1.0);
-        this.graphic = new AntModelGraphic(color, color, headColor, bodyColor1, bodyColor2, javafx.scene.paint.Color.rgb(64, 255, 0, 1.0));
+        double scale = 1 + (1 / 16f * (genome.getHealthPoints() - 2));
+        this.graphic = new AntModelGraphic(color, color, headColor, bodyColor1, bodyColor2, Color.rgb(64, 255, 0, 1.0), scale);
 
         this.antText = null;
         this.carriesFood = false;
@@ -51,7 +53,10 @@ public class Ant extends Animal {
         return carriesFood;
     }
 
-    public void isCarryingFood(boolean bool) {
+    /**
+     * @param bool Hiermit kann man der Ameise ihre Futtereinheiten geben und wegnehemen.
+     */
+    public void setCarryingFood(boolean bool) {
         carriesFood = bool;
     }
 
@@ -77,7 +82,6 @@ public class Ant extends Animal {
      * @return Beschreibungstext, kann {@code null} sein.
      */
     public String getText() {
-        // Frei nach Joachim Rigelnatz: "Die Ameisen"
         return this.antText;
     }
 }
