@@ -4,6 +4,12 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
+/**
+ * @author Cedric Seiz
+ * Übertragung der funktion der Klasse Improved Noise in ein Writeable Image und gleichzeitig auch verarbeitung um die Textur
+ * möglichst nah an die natürliche Textur von Sand anzupassen.
+ */
+
 public class NoiseImageBuilder extends WritableImage {
     private PixelWriter pixelWriter;
 

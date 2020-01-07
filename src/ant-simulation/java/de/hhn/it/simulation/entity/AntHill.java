@@ -5,10 +5,11 @@ import de.hhn.it.simulation.Helper;
 import de.hhn.it.simulation.Reproduce;
 import de.hhn.it.ui.ImageFileGraphic;
 import javafx.scene.paint.Color;
+
 import java.util.*;
 
 /**
- * @Author: Cedric Seiz
+ * @author Cedric Seiz
  * Diese Klasse beschreibt Ameisenhügel. Sie kann Einheiten des Types Ant reproduzieren und zerstört sich selbst wenn sie entweder
  * ihr limit erreicht hat, oder wenn sie kein Futter mehr hat. Von Simulation werden dann Queens erzeugt je nachdem wie viel Futter
  * und wie viele Ameisen der Ameisenhfufen bei seiner Zersörung beherbergt.
@@ -18,7 +19,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
     private final Genome genome;
 
     private ArrayList<Ant> antArrayList;
-    private long lastChildrenCreation;
+    private int lastChildrenCreation;
     private int stash;
     private int feedCount;
     private boolean terminateHill;
@@ -30,7 +31,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
         this.genome = genome;
 
         this.antArrayList = new ArrayList<>();
-        this.lastChildrenCreation = 0;
+        this.lastChildrenCreation = 6000;
         this.stash = stash;
         this.stash += genome.getThreshold();
         this.terminateHill = false;
@@ -52,7 +53,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
             antArrayList.forEach(Ant::doSimulationStep);
         }
         feedCount--;
-        if(feedCount<=0) {
+        if (feedCount <= 0) {
             stash -= genome.getFoodConsumption() * 0.01 * getAntCount();
             feedCount = 550 + Helper.randomInt(100);
         }
@@ -64,7 +65,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
     @Override
     public List<Ant> createChildren() {
         List<Ant> newAntList = new ArrayList<>();
-        if (lastChildrenCreation >= 3000) {
+        if (lastChildrenCreation >= 6000) {
             int fighter = 0;
             int worker = 0;
             boolean[] bool = {false, false};
@@ -122,7 +123,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
      * @return Beschreibungstext, kann {@code null} sein.
      */
     public String getText() {
-        return "Stash: " + stash + "  Ants: " + antArrayList.size() + "\n" + genome.getText();
+        return "Stash: " + stash + "  Ants: " + antArrayList.size() + "\n" + "New Children in: " + (6000 - lastChildrenCreation) + "\n" + genome.getText();
     }
 
     public Genome getGenome() {

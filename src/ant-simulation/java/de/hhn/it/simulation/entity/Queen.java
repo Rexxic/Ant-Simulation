@@ -5,7 +5,7 @@ import de.hhn.it.ui.AntModelGraphic;
 import javafx.scene.paint.Color;
 
 /**
- * @Author Cedric Seiz
+ * @author Cedric Seiz
  * Die Queen erbt ihr Genom von einem Ameisenhaufen und mutiert es. Sie bekommt von der Simulation ein Ziel gesetzt und
  * "Verwandelt" sich in einen Ameisenhaufen den sie ihr Genom weitergibt wenn sie ihr Ziel erreicht hat (sie wird gelöscht
  * und der Ameisenhaufen gespawnt).

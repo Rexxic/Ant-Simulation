@@ -3,7 +3,7 @@ package de.hhn.it.simulation.entity;
 import de.hhn.it.ui.SimulationGraphic;
 
 /**
- * @Author Cedric Seiz
+ * @author Cedric Seiz
  * Mit der Klasse {@link SimulationMember} werden Teilnehmer der Simulation
  * funktional abgebildet. Teilnehmer der Simulation definieren ihre Position und
  * Rotation (in Grad).

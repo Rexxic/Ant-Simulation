@@ -6,7 +6,7 @@ import de.hhn.it.simulation.Simulation;
 import de.hhn.it.ui.ImageFileGraphic;
 
 /**
- * @Author: Cedric Seiz
+ * @author Cedric Seiz
  * Diese Klasse stellt einem Tier sämtliche methoden zur verfügung die es in der simulation benötigt. Dazu gehört das sich
  * innerhalb der Simulationsgrenzen bewegen, sich auf einen bestimmten Punkt zuzubewegen, sowie schaden nehmen und schaden
  * an anderen Tieren verursachen.
@@ -137,8 +137,8 @@ public abstract class Animal extends SimulationMember {
      * @param rnd         Wert um den das Tier pro Schritt gedreht wird
      * @param rndOffset   zur Verschiebung des Wertebereichs wenn es sich bei dem rnd Wert um einen zufällig generierten
      *                    Wert handelt
-     *
-     * Diese Methode dreht die Ameise schrittweise in Richtung der relativen Koordinaten.
+     *                    <p>
+     *                    Diese Methode dreht die Ameise schrittweise in Richtung der relativen Koordinaten.
      */
     protected void turnTo(double diffX, double diffY, double rnd, double rndOffset) {
         if (Math.sin(Math.toRadians(super.rotation + Helper.offset(diffX, diffY))) >= 0) {

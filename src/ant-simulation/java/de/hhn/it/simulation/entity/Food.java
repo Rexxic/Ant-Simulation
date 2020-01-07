@@ -9,7 +9,7 @@ public class Food extends SimulationMember {
     private boolean hasFood;
 
     /**
-     * @Author Cedric Seiz
+     * @author Cedric Seiz
      * Diese Klasse stellt Futter in der Simulation dar.
      */
     public Food(double x, double y, int stash) {
@@ -29,7 +29,10 @@ public class Food extends SimulationMember {
      */
     public boolean takeFood(int amount) {
         if (stash > amount) {
-            stash-=amount;
+            stash -= amount;
+            return true;
+        } else if (stash < 0) {
+            hasFood = false;
             return true;
         } else {
             hasFood = false;

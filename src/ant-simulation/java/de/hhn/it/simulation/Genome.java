@@ -1,7 +1,7 @@
 package de.hhn.it.simulation;
 
 /**
- * @Author Cedric Seiz
+ * @author Cedric Seiz
  * Diese Klasse stellt ein Genom dar. Es beinhaltet verschiedene Werte die zufällig festgelegt werden,
  * und die sich Simulationsteilnehmer alle auf einmal vererben könen.
  */

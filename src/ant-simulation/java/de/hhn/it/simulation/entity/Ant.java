@@ -5,10 +5,9 @@ import de.hhn.it.ui.AntModelGraphic;
 import javafx.scene.paint.Color;
 
 /**
- * @Author: Cedric Seiz
+ * @author Cedric Seiz
  * Mit der Klasse {@link Ant} werden Ameisen in der Simulation funktional
  * abgebildet. Ameisen definieren ihre Position und Rotation (in Grad).
- *
  * @see AntModelGraphic
  */
 public class Ant extends Animal {

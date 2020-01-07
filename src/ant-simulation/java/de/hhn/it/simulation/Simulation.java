@@ -6,16 +6,15 @@ import de.hhn.it.ui.UiManager;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
 
 /**
+ * @author Cedric Seiz
  * Dies Klasse bildet das zentrale Element der Simulation. Sie koordiniert die
  * Bewegungen, das Erscheinen und Verschwinden der Simulationsteilnehmer. Die
  * Methode {@link Simulation#doSimulationStep()} wird vom Taktgeber der
  * grafischen Oberfläche in regelmäßigen Abständen aufgerufen.
- *
  * @see AntApplication#SIMULATION_FRAME_LENGTH
  */
 public class Simulation {
@@ -36,8 +35,11 @@ public class Simulation {
     private ArrayList<Queen> queenList;
     private WeakHashMap<Ant, Ant[]> antAntArrayHashMap;
     private WeakHashMap<Ant, Food> antFoodHashMap;
-    private WeakHashMap<Ant,Food> depletedFoodHashMap;
+    private WeakHashMap<Ant, Food> depletedFoodHashMap;
     private WeakHashMap<Animal, Animal> predatorHashMap;
+
+    //Statistic Values
+    private float allHealth, allSpeed, allPopLimit;
     private int antCount;
 
     public Simulation(UiManager uiManager) {
@@ -53,6 +55,10 @@ public class Simulation {
         this.depletedFoodHashMap = new WeakHashMap<>();
         this.predatorHashMap = new WeakHashMap<>();
 
+        this.allHealth = 0;
+        this.allSpeed = 0;
+        this.allPopLimit = 0;
+
         Simulation.simulationSurfaceHeight = uiManager.getSimulationSurfaceHeight();
         Simulation.simulationSurfaceWidth = uiManager.getSimulationSurfaceWidth();
 
@@ -66,6 +72,7 @@ public class Simulation {
             AntHill antHill = new AntHill(x, y, Helper.randomInt(180) - 90, color, Math.round(startSize * genome.getFoodConsumption()), genome);
             antHillList.add(antHill);
             uiManager.add(antHill);
+            addAntHillStats(antHill);
 
             List<Ant> newAntList = new ArrayList<>();
             for (int count = 0; count < startSize; count++) {
@@ -124,7 +131,7 @@ public class Simulation {
             List<Ant> antHillAntList = antHill.getAntList();
             allAntArrayList.removeAll(antHillAntList);
             if (antHill.isTerminateHill()) {
-                antCount[0]-=antHill.getAntCount();
+                antCount[0] -= antHill.getAntCount();
 
                 terminateAntHill(antHill);
                 deleteAntHillList.add(antHill);
@@ -156,6 +163,7 @@ public class Simulation {
         for (AntHill antHill : deleteAntHillList) {
             antHillList.remove(antHill);
             uiManager.remove(antHill);
+            subAntHillStats(antHill);
         }
 
         /*
@@ -183,6 +191,7 @@ public class Simulation {
             AntHill antHill = new AntHill(queen.getX(), queen.getY(), queen.getRotation(), queen.getColor(), queen.getStash(), queen.getGenome());
             antHillList.add(antHill);
             uiManager.add(antHill);
+            addAntHillStats(antHill);
             queenList.remove(queen);
             uiManager.remove(queen);
         }
@@ -281,10 +290,10 @@ public class Simulation {
                 }
             }
         } else {
-            for (Ant nearAnt:antAntArrayHashMap.get(ant)) {
-                if(antFoodHashMap.get(ant) == depletedFoodHashMap.get(nearAnt)) {
+            for (Ant nearAnt : antAntArrayHashMap.get(ant)) {
+                if (antFoodHashMap.get(ant) == depletedFoodHashMap.get(nearAnt)) {
                     antFoodHashMap.remove(ant);
-                    depletedFoodHashMap.put(ant,depletedFoodHashMap.get(nearAnt));
+                    depletedFoodHashMap.put(ant, depletedFoodHashMap.get(nearAnt));
                     break;
                 }
             }
@@ -297,12 +306,13 @@ public class Simulation {
             antHill.giveFood();
         } else if (ant.isNearTarget()) {
             if (food != null && foodArrayList.contains(food) && food.takeFood(ant.getGenome().getCapacity())) {
+                if (!food.hasFood()) {
+                    removeFood(ant, food);
+                    food = null;
+                }
                 ant.setCarryingFood(true);
             } else if (food != null && foodArrayList.contains(food) && !food.hasFood()) {
-                antFoodHashMap.remove(ant);
-                depletedFoodHashMap.put(ant,food);
-                uiManager.remove(food);
-                foodArrayList.remove(food);
+                removeFood(ant, food);
                 food = null;
                 ant.setNewTarget(-50, -50);
             } else {
@@ -313,6 +323,13 @@ public class Simulation {
         }
 
         antSetTarget(ant, food, antHill);
+    }
+
+    private void removeFood(Ant ant, Food food) {
+        antFoodHashMap.remove(ant);
+        depletedFoodHashMap.put(ant, food);
+        uiManager.remove(food);
+        foodArrayList.remove(food);
     }
 
     /**
@@ -488,8 +505,32 @@ public class Simulation {
         return antHillList.size();
     }
 
+    public void addAntHillStats(AntHill antHill) {
+        allSpeed += antHill.getGenome().getMovementSpeed();
+        allHealth += antHill.getGenome().getHealthPoints();
+        allPopLimit += antHill.getGenome().getAntLimit();
+    }
+
+    public void subAntHillStats(AntHill antHill) {
+        allSpeed -= antHill.getGenome().getMovementSpeed();
+        allHealth -= antHill.getGenome().getHealthPoints();
+        allPopLimit -= antHill.getGenome().getAntLimit();
+    }
+
+    public float getAverageHealth() {
+        return allHealth / antHillList.size();
+    }
+
+    public float getAverageSpeed() {
+        return allSpeed / antHillList.size();
+    }
+
+    public float getAveragePopLimit() {
+        return allPopLimit / antHillList.size();
+    }
+
     public float getAnthillAverageSize() {
-        return (float)antCount/antHillList.size();
+        return (float) antCount / antHillList.size();
     }
 
     public int getQueenCount() {

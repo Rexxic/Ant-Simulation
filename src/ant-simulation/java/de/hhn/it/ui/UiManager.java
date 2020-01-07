@@ -536,6 +536,9 @@ public class UiManager {
         BOTTOM, MIDDLE, TOP
     }
 
+    /**
+     * Generieren der Buttons die auf die controlPane gesetzt werden sollen.
+     */
     private void initButtons() {
         Button button = new Button();
 
@@ -590,14 +593,23 @@ public class UiManager {
         controlPane.getChildren().add(controlGroup);
     }
 
+    /**
+     * Funktion zur Aktualisierung der Informationen auf der controlPane -> updateUi().
+     */
     private void updateSimStats() {
         if (simulation != null) {
 
             String statString = "\nAnthills: " +
                     simulation.getAnthillCount() +
-                    "\nAnts: " +
+                    "\nAverage Speed: " +
+                    simulation.getAverageSpeed() +
+                    "\nAverage Health: " +
+                    simulation.getAverageHealth() +
+                    "\nAverage Ant limit: " +
+                    simulation.getAveragePopLimit() +
+                    "\n\nAnts: " +
                     simulation.getAntCount() +
-                    "\nAverage hill size: " +
+                    "\nAverage per Hill: " +
                     simulation.getAnthillAverageSize() +
                     "\nQueens: " +
                     simulation.getQueenCount() +
@@ -607,6 +619,6 @@ public class UiManager {
                     simulation.getNaturalEnemyCount();
 
             simStatsBody.setText(statString);
-        } else simStatsBody.setText("\nAnthills:\nAnts:\nQueens:\nFeed Piles:\nEnemies:");
+        } else simStatsBody.setText("\nAnthills:\nAverage Speed:\nAverage Health:\nAverage Ant limit:\nAnts:\nQueens:\nFeed Piles:\nEnemies:");
     }
 }

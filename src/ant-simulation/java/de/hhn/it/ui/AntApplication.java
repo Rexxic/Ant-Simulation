@@ -58,6 +58,7 @@ public class AntApplication extends Application {
         scrollPane.setPrefSize(SCREEN_SIZE.getWidth(), SCREEN_SIZE.getHeight());
         scrollPane.getStyleClass().add("scroll-pane");
 
+        //Pane mit festem Platz in einer Ecke des Bildschirms
         Pane controllPane = new Pane();
         double controllPaneWidth = 135;
         double controllPaneHeight = 35;

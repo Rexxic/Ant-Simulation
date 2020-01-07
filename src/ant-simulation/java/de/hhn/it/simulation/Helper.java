@@ -5,6 +5,7 @@ import javafx.scene.paint.Color;
 import java.util.Random;
 
 /**
+ * @author Cedric Seiz
  * Klasse mit Hilfsmethoden zum erzeugen von Zufallszahlen und zum Umrechnen von
  * Grad in Bogenmass und umgekehrt. Für alle weiteren mathematischen Funktionen
  * siehe {@link Math}.
