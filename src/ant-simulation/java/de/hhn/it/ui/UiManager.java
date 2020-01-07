@@ -10,7 +10,6 @@ import javafx.event.EventHandler;
 import javafx.scene.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -40,6 +39,7 @@ public class UiManager {
     private Simulation simulation;
     private Timeline mainAnimation;
     private LegAnimation legAnimation;
+    private Text simStatsBody;
     private boolean isPaused;
 
     /**
@@ -493,6 +493,7 @@ public class UiManager {
     private void updateUi() {
         for (SimulationMember o : simulationMembersOnGroup.keySet())
             o.getSimulationGraphic().updateUi(o);
+        updateSimStats();
     }
 
     /**
@@ -569,8 +570,43 @@ public class UiManager {
             }
         });
 
-        Group controlGroup = new Group(pauseButton, button);
+        int textSize = 14;
+
+        Text simStatsHeading = new Text();
+        simStatsHeading.setText("Simulation Stats:");
+        simStatsHeading.setFont(Font.font(null, FontWeight.BOLD, textSize));
+
+        simStatsBody = new Text();
+        simStatsBody.setFont(Font.font(textSize));
+
+        TextFlow simStats = new TextFlow();
+        simStats.getChildren().addAll(simStatsHeading, simStatsBody);
+
+        simStats.setTranslateX(5);
+        simStats.setTranslateY(35);
+
+        Group controlGroup = new Group(pauseButton, button, simStats);
 
         controlPane.getChildren().add(controlGroup);
+    }
+
+    private void updateSimStats() {
+        if (simulation != null) {
+
+            String statString = "\nAnthills: " +
+                    simulation.getAnthillCount() +
+                    "\nAnts: " +
+                    simulation.getAntCount() +
+                    "\nAverage hill size: " +
+                    simulation.getAnthillAverageSize() +
+                    "\nQueens: " +
+                    simulation.getQueenCount() +
+                    "\nFeed Piles: " +
+                    simulation.getFoodCount() +
+                    "\nEnemies: " +
+                    simulation.getNaturalEnemyCount();
+
+            simStatsBody.setText(statString);
+        } else simStatsBody.setText("\nAnthills:\nAnts:\nQueens:\nFeed Piles:\nEnemies:");
     }
 }

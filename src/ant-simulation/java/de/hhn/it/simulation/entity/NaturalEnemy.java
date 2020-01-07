@@ -18,12 +18,12 @@ public class NaturalEnemy extends Animal implements Reproduce<Food> {
     private int maxStash;
 
     public NaturalEnemy(double x, double y, double rotation) {
-        super(x, y, rotation, new ImageFileGraphic("bug.png"), new Genome());
+        super(x, y, rotation, new ImageFileGraphic("ameisenbär.png"), new Genome());
         this.stash = 0;
         this.sleep = 0;
         maxStash = 50 + Helper.randomInt(50);
-        this.setStep(1.5);
-        setNearTargetDistance(10);
+        this.setStep(1.4);
+        setNearTargetDistance(20);
     }
 
     public void doSimulationStep() {

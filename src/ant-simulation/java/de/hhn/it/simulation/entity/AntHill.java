@@ -30,7 +30,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
         this.genome = genome;
 
         this.antArrayList = new ArrayList<>();
-        this.lastChildrenCreation = System.currentTimeMillis();
+        this.lastChildrenCreation = 0;
         this.stash = stash;
         this.stash += genome.getThreshold();
         this.terminateHill = false;
@@ -46,11 +46,8 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
      */
     @Override
     public void doSimulationStep() {
-        if (antArrayList.size() >= genome.getAntLimit() || (stash <= 0 && antArrayList.isEmpty())) {
+        if (antArrayList.size() >= genome.getAntLimit() || (stash <= genome.getThreshold() && antArrayList.isEmpty())) {
             terminateHill = true;
-        } else if (stash < 0) {
-            removeChildren(antArrayList.get(Helper.randomInt(antArrayList.size())));
-            giveFood();
         } else {
             antArrayList.forEach(Ant::doSimulationStep);
         }
@@ -67,7 +64,7 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
     @Override
     public List<Ant> createChildren() {
         List<Ant> newAntList = new ArrayList<>();
-        if (System.currentTimeMillis() - lastChildrenCreation >= 9000 + Helper.randomInt(2000)) {
+        if (lastChildrenCreation >= 3000) {
             int fighter = 0;
             int worker = 0;
             boolean[] bool = {false, false};
@@ -86,8 +83,9 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
                 Ant ant = new Ant(super.x, super.y, Helper.randomDouble(360), workerColor, bool[count % 2], genome);
                 newAntList.add(ant);
             }
-            lastChildrenCreation = System.currentTimeMillis();
+            lastChildrenCreation = 0;
         }
+        lastChildrenCreation++;
         return newAntList;
     }
 
@@ -102,6 +100,10 @@ public class AntHill extends SimulationMember implements Reproduce<Ant> {
 
     public int getAntCount() {
         return antArrayList.size();
+    }
+
+    public int getStash() {
+        return stash;
     }
 
     public List<Ant> getAntList() {

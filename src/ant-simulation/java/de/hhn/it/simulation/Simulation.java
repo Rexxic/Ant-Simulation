@@ -8,6 +8,7 @@ import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * Dies Klasse bildet das zentrale Element der Simulation. Sie koordiniert die
@@ -19,24 +20,25 @@ import java.util.List;
  */
 public class Simulation {
     private static final int ANTHILL_COUNT = 5;
-    private static final int FOOD_COUNT = 25;
+    private static final int FOOD_COUNT = 8;
     private static final int MIN_ANT_COUNT = 200;
     private static final int MAX_ANT_COUNT = 1000;
     private static final int NATURAL_ENEMY_COUNT = 2;
     private static final int FIELD_OF_VIEW = 150;
-    private static final int FOOD_STASH_MULTIPLICAND = 5;
+    private static final int FOOD_STASH = 65;
 
-    private static double simulationSurfaceHeight;
-    private static double simulationSurfaceWidth;
+    private static double simulationSurfaceHeight, simulationSurfaceWidth;
 
     private UiManager uiManager;
     private ArrayList<Food> foodArrayList;
     private ArrayList<AntHill> antHillList;
     private ArrayList<NaturalEnemy> naturalEnemyList;
     private ArrayList<Queen> queenList;
-    private HashMap<Ant, Ant[]> antAntArrayHashMap;
-    private HashMap<Ant, Food> antFoodHashMap;
-    private HashMap<Animal, Animal> predatorHashMap;
+    private WeakHashMap<Ant, Ant[]> antAntArrayHashMap;
+    private WeakHashMap<Ant, Food> antFoodHashMap;
+    private WeakHashMap<Ant,Food> depletedFoodHashMap;
+    private WeakHashMap<Animal, Animal> predatorHashMap;
+    private int antCount;
 
     public Simulation(UiManager uiManager) {
         this.uiManager = uiManager;
@@ -46,9 +48,10 @@ public class Simulation {
         this.naturalEnemyList = new ArrayList<>();
         this.queenList = new ArrayList<>();
 
-        this.antAntArrayHashMap = new HashMap<>();
-        this.antFoodHashMap = new HashMap<>();
-        this.predatorHashMap = new HashMap<>();
+        this.antAntArrayHashMap = new WeakHashMap<>();
+        this.antFoodHashMap = new WeakHashMap<>();
+        this.depletedFoodHashMap = new WeakHashMap<>();
+        this.predatorHashMap = new WeakHashMap<>();
 
         Simulation.simulationSurfaceHeight = uiManager.getSimulationSurfaceHeight();
         Simulation.simulationSurfaceWidth = uiManager.getSimulationSurfaceWidth();
@@ -83,38 +86,58 @@ public class Simulation {
     }
 
     /**
-     * Führt einen Simulationsschritt für jedes Mitglied der Simulation durch und führt sonstige Befehle aus die
-     * jeden Simulationsschritt ausgeführt werden müssen.
+     * Führt einen Simulationsschritt für jedes Mitglied der Simulation durch und führt sonstige Aktionen aus die
+     * jeden Simulationsschritt stattfinden müssen.
      */
     public void doSimulationStep() {
         final int[] antCount = {0};
         final List<Animal> allAntArrayList = new ArrayList<>();
 
+        /*
+        Erstellt eine Liste mit allen Ameisen der Simulation und zählt sie, beides wird später benötigt.
+         */
         antAntArrayHashMap.clear();
         antHillList.forEach(AntHill -> {
             antCount[0] += AntHill.getAntCount();
             allAntArrayList.addAll(AntHill.getAntList());
         });
 
-        if (antCount[0] != 0) {
-            while (foodArrayList.size() < FOOD_COUNT) {
-                double x = rndWidth(0.5 / 16);
-                double y = rndHeight(0.5 / 16);
+        this.antCount = antCount[0];
 
-                Food food = new Food(x, y, 10 + Helper.randomInt(antCount[0] / FOOD_COUNT * FOOD_STASH_MULTIPLICAND));
-                uiManager.add(food);
-                foodArrayList.add(food);
-            }
+        /*
+        Diese Schleif stellt sicher, das sich stets so viel Futterhaufen wie mit FOOD_COUNT angegeben in der Simulation befinden.
+         */
+        while (foodArrayList.size() < FOOD_COUNT) {
+            double x = rndWidth(0.5 / 16);
+            double y = rndHeight(0.5 / 16);
+
+            Food food = new Food(x, y, 10 + Helper.randomInt(FOOD_STASH));
+            uiManager.add(food);
+            foodArrayList.add(food);
         }
+
+        /*
+        Für jeden Ameisenhaufen wird ein Simulationsschritt durchgeführt oder er wird falls nötig aus der Simulation genommen.
+         */
         ArrayList<AntHill> deleteAntHillList = new ArrayList<>();
         for (AntHill antHill : antHillList) {
             List<Ant> antHillAntList = antHill.getAntList();
             allAntArrayList.removeAll(antHillAntList);
             if (antHill.isTerminateHill()) {
+                antCount[0]-=antHill.getAntCount();
+
                 terminateAntHill(antHill);
                 deleteAntHillList.add(antHill);
             } else {
                 antCount[0] = createChildren(antHill, antCount[0]);
+                if (antHill.getStash() <= 0) {
+                    Ant toRemove = antHill.getAntList().get(Helper.randomInt(antHill.getAntList().size()));
+                    antHill.removeChildren(toRemove);
+                    uiManager.remove(toRemove);
+                    antHill.giveFood();
+                    this.antCount--;
+                }
+
                 for (Ant ant : antHillAntList) {
                     if (ant.isFigther()) {
                         updateAntAntArrayHashMap(ant, antHillAntList);
@@ -135,6 +158,11 @@ public class Simulation {
             uiManager.remove(antHill);
         }
 
+        /*
+        Für die restliche Simulationsteilnehmer werden ihre Ziele gesetzt und ein Simulationsschritt durchgeführt. Die
+        Ameisenköniginnen werden bei bedarf aus der Simulation entfernt und Ameisenhaufen mit gleichen Eigenschaften
+        an ihrer Stelle erzeugt.
+         */
         for (NaturalEnemy naturalEnemy : naturalEnemyList) {
             updatePredatorHashMap(naturalEnemy, allAntArrayList);
             naturalEnemyMovementHandler(naturalEnemy);
@@ -150,6 +178,7 @@ public class Simulation {
                 queen.doSimulationStep();
             }
         }
+
         for (Queen queen : deleteQueenList) {
             AntHill antHill = new AntHill(queen.getX(), queen.getY(), queen.getRotation(), queen.getColor(), queen.getStash(), queen.getGenome());
             antHillList.add(antHill);
@@ -160,8 +189,9 @@ public class Simulation {
     }
 
     /**
-     * Fragt bei einem Ameisenhaufen die Methode des Reproduce-Interfaces ab und erzeugt diese Liste an Ameisen,
-     * wenn die Gesamtameisenzahl der Simulation nicht überschritten wird.
+     * Fragt bei einem Ameisenhaufen die Methode des Reproduce-Interfaces ab und erzeugt eine Liste an Ameisen wenn die
+     * maximale Ameisenzahl der Simulation nicht überschritten wird, welche wieder an den Ameisenhaufen übergeben wird.
+     *
      * @param antCount Der aktuelle Stand des Zählers
      * @return Zähler plus die Menge an Ameisen die hinzuhgefüg wurden.
      */
@@ -183,8 +213,8 @@ public class Simulation {
     }
 
     /**
-     * Updated die Hashmap AntAntArryHashMap, welche für jede Ameise ein Array aus 5 Ameisen beinhaltet und die
-     * für jede Ameise sichtbaren Ameisen bereithält.
+     * Updated die Hashmap AntAntArryHashMap, welche für jede Ameise auf ein ein Array aus 5 Ameisen verweist, welches die
+     * für diese Ameise sichtbaren Ameisen bereithält.
      */
     public void updateAntAntArrayHashMap(Ant ant, List<Ant> antList) {
         int count = 0;
@@ -202,7 +232,7 @@ public class Simulation {
     }
 
     /**
-     * Hält für die Jäger der Simulation das Ziel das am nächsten und in Sichtweite ist bereit.
+     * Verweist für jeden Jäger der Simulation auf das näheste potentielle Opfer.
      */
     public void updatePredatorHashMap(Animal animal, List<Animal> targetList) {
         double minDistance = FIELD_OF_VIEW;
@@ -221,7 +251,7 @@ public class Simulation {
     }
 
     /**
-     * Map die für jede Ameise einen Futterhaufen verlinkt den sie sich gemerkt hat.
+     * Map die für jede Ameise einen Futterhaufen verlinkt den sie sich dadurch "gemerkt" hat.
      */
     public void updateAntFoodHashMap(Ant ant) {
         if (!antFoodHashMap.containsKey(ant)) {
@@ -235,9 +265,9 @@ public class Simulation {
     }
 
     /**
-     * Schaltet je nachdem ob die Ameise ein Ziel oder Futter hat oder weis wo sich futter befindet zwischen laufe zum Futter,
-     * laufe zum Ameisenhaufen und laufe zufällig herum um. Ausserdem wird der Standort von Futter von anderen Ameisen Abgefragt
-     * wenn für die Ameise selbst keines bekannt ist.
+     * Schaltet je nachdem ob die Ameise ein Ziel oder Futter hat oder weis wo sich Futter befindet zwischen laufe zum Futter,
+     * laufe zum Ameisenhaufen und laufe zufällig herum um und übergibt Futtereinheiten. Zudem wird der Standort von Futter von
+     * anderen Ameisen abgefragt wenn für die Ameise selbst keines bekannt ist.
      */
     public void commonAntMovementHandler(Ant ant, AntHill antHill) {
         if (!antFoodHashMap.containsKey(ant)) {
@@ -248,6 +278,14 @@ public class Simulation {
                         antFoodHashMap.put(ant, nearAntFood);
                         break;
                     }
+                }
+            }
+        } else {
+            for (Ant nearAnt:antAntArrayHashMap.get(ant)) {
+                if(antFoodHashMap.get(ant) == depletedFoodHashMap.get(nearAnt)) {
+                    antFoodHashMap.remove(ant);
+                    depletedFoodHashMap.put(ant,depletedFoodHashMap.get(nearAnt));
+                    break;
                 }
             }
         }
@@ -262,6 +300,7 @@ public class Simulation {
                 ant.setCarryingFood(true);
             } else if (food != null && foodArrayList.contains(food) && !food.hasFood()) {
                 antFoodHashMap.remove(ant);
+                depletedFoodHashMap.put(ant,food);
                 uiManager.remove(food);
                 foodArrayList.remove(food);
                 food = null;
@@ -278,7 +317,7 @@ public class Simulation {
 
     /**
      * Schaltet je nachdem ob die Ameise ein Ziel oder Futter hat zwischen laufe in die Richtung andere Ameisen,
-     * laufe zum Ameisenhaufen, greife das Ziel an und laufe zufällig herum um.
+     * laufe zum Ameisenhaufen, greife das Ziel an und laufe zufällig herum um und übergibt Futtereinheiten.
      */
     public void fighterAntMovementHandler(Ant ant, AntHill antHill) {
         Ant target = null;
@@ -299,6 +338,7 @@ public class Simulation {
                             ant.setCarryingFood(true);
                             predatorHashMap.remove(ant);
                             uiManager.remove(target);
+                            antCount--;
                             target = null;
                             break;
                         }
@@ -319,6 +359,9 @@ public class Simulation {
         antSetTarget(ant, finalTarget, antHill);
     }
 
+    /**
+     * Lässt die Jäger Ameisen verfolgen und erledigen sofern er nicht am "Schlafen" ist.
+     */
     public void naturalEnemyMovementHandler(NaturalEnemy naturalEnemy) {
         Ant target = null;
         if (predatorHashMap.containsKey(naturalEnemy) && predatorHashMap.get(naturalEnemy) instanceof Ant) {
@@ -326,13 +369,14 @@ public class Simulation {
         }
         if (!naturalEnemy.isSleeping()) {
             if (target != null && naturalEnemy.isNearTarget()) {
-                if (calculateDistance(naturalEnemy, target) <= 10) {
+                if (calculateDistance(naturalEnemy, target) <= 20) {
                     if (naturalEnemy.attack(target)) {
                         for (AntHill targetAntHill : antHillList) {
                             if (targetAntHill.removeChildren(target)) {
                                 naturalEnemy.addFood();
                                 predatorHashMap.remove(naturalEnemy);
                                 uiManager.remove(target);
+                                antCount--;
                                 target = null;
                                 break;
                             }
@@ -349,6 +393,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Fragt für die Jäger die Methode des Reproduce Interfaces ab und erzeugt bei bedarf neue Futterhaufen.
+     */
     private void naturalEnemyCreateChildren(NaturalEnemy naturalEnemy) {
         if (naturalEnemy.isSleeping()) {
             if (naturalEnemy.isAwakening()) {
@@ -362,6 +409,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Verwaltet für die Ameise ihren Zielpunkt auf der Simulationsoberfläche.
+     */
     private void antSetTarget(Ant ant, SimulationMember target, SimulationMember antHill) {
         if (target != null) {
             ant.lock(true);
@@ -373,11 +423,15 @@ public class Simulation {
         } else ant.setNewTarget(antHill.getX(), antHill.getY());
     }
 
+    /**
+     * Entfernt einen Ameisenhaufen aus der Simulation und erzeugt bei bedarf Ameisenköniginnen.
+     */
     private void terminateAntHill(AntHill antHill) {
         int antHillWorkers = 0;
         for (Ant ant : antHill.getAntList()) {
             antHillWorkers++;
             uiManager.remove(ant);
+            antCount--;
         }
         int newQueen = Math.round(antHillWorkers / (antHill.getGenome().getFoodConsumption() * 4));
         for (int i = 0; i < newQueen; i++) {
@@ -414,7 +468,7 @@ public class Simulation {
     }
 
     /**
-     * @param excludedPercent if<0=0; if>=1=1;>
+     * @param excludedPercent if x<0 = 0; if x>=1 = 1;>
      */
     private static double rndWidth(double excludedPercent) {
         if (excludedPercent <= 0) {
@@ -424,5 +478,29 @@ public class Simulation {
         }
 
         return excludedPercent / 2 * simulationSurfaceWidth + Helper.randomDouble(simulationSurfaceWidth * (1 - excludedPercent));
+    }
+
+    public int getAntCount() {
+        return antCount;
+    }
+
+    public int getAnthillCount() {
+        return antHillList.size();
+    }
+
+    public float getAnthillAverageSize() {
+        return (float)antCount/antHillList.size();
+    }
+
+    public int getQueenCount() {
+        return queenList.size();
+    }
+
+    public int getFoodCount() {
+        return foodArrayList.size();
+    }
+
+    public int getNaturalEnemyCount() {
+        return naturalEnemyList.size();
     }
 }

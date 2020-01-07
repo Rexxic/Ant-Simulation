@@ -40,8 +40,8 @@ public class AntApplication extends Application {
     /*
      * Increase SCROLLPANE WIDTH and HEIGHT if you want a bigger window
      */
-    private static final double SCROLLPANE_WIDTH = SCREEN_SIZE.getWidth()*3/4;
-    private static final double SCROLLPANE_HEIGHT = SCREEN_SIZE.getHeight()*3/4;
+    private static final double SCROLLPANE_WIDTH = SCREEN_SIZE.getWidth() * 3 / 4;
+    private static final double SCROLLPANE_HEIGHT = SCREEN_SIZE.getHeight() * 3 / 4;
     /*
      * If set to true, deactivates the leg animation
      */
@@ -88,7 +88,7 @@ public class AntApplication extends Application {
         stage.setFullScreen(false);
 
 
-        final UiManager uiManager = new UiManager(stage, root, controllPane,scrollPane);
+        final UiManager uiManager = new UiManager(stage, root, controllPane, scrollPane);
 
         final Timeline mainAnimator = new Timeline(new KeyFrame(Duration.millis(SIMULATION_FRAME_LENGTH), new EventHandler<ActionEvent>() {
             @Override
